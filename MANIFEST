@@ -3,6 +3,8 @@ Makefile.PL
 MANIFEST
 README
 TreeListCtrl.xs
+typemap
+cpp/tl_constants.cpp
 cpp/treelistctrl.cpp
 cpp/treelistctrl.h
 lib/Wx/TreeListCtrl.pm

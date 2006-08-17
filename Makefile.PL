@@ -1,11 +1,6 @@
 use strict;
 use Wx::build::MakeMaker;
 
-$Carp::Verbose = 1;
-print "is_core = ", Wx::build::MakeMaker::is_core(), "\n";
-print "is_wxPerl_tree = ", Wx::build::MakeMaker::is_wxPerl_tree(), "\n";
-print "get_api_directory = ", Wx::build::MakeMaker::get_api_directory(), "\n";
-
 wxWriteMakefile(
 	NAME			=> 'Wx::TreeListCtrl',
     VERSION_FROM	=> 'lib/Wx/TreeListCtrl.pm',

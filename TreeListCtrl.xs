@@ -26,6 +26,6 @@ BOOT:
 INCLUDE: XS/TreeListCtrl.xs
 INCLUDE: XS/TreeListColumnInfo.xs
 
-## include "cpp/tl_constants.cpp"
+#include "cpp/tl_constants.cpp"
 
 MODULE=Wx__TreeListCtrl

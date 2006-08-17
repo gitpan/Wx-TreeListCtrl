@@ -1,5 +1,8 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.02  Thu Aug  17 2006
+    - fixed exporting of constants
+
 0.01  Tue Aug  8 10:28:54 2006
 	- first attempt at wrapping wxTreeListCtrl
 

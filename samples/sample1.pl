@@ -70,8 +70,9 @@ package MyTreeList;
 
 use base qw( Wx::TreeListCtrl );
 use Wx qw( wxLIST_FORMAT_LEFT );
-use Wx qw( wxTR_HIDE_ROOT wxTR_ROW_LINES wxTR_HAS_BUTTONS wxTR_FULL_ROW_HIGHLIGHT wxTR_NO_LINES );
-use Wx::TreeListCtrl qw( wxTR_VRULE wxTR_SHOW_ROOT_LABEL_ONLY );
+use Wx qw( wxTR_HIDE_ROOT wxTR_ROW_LINES wxTR_HAS_BUTTONS wxTR_FULL_ROW_HIGHLIGHT wxTR_NO_LINES wxTR_HAS_VARIABLE_ROW_HEIGHT );
+#use Wx::TreeListCtrl qw( wxTR_VRULE wxTR_SHOW_ROOT_LABEL_ONLY );
+use Wx qw( wxTR_VRULE wxTR_SHOW_ROOT_LABEL_ONLY );
 
 sub new {
 	my ($class, $parent) = @_;
@@ -80,9 +81,15 @@ sub new {
 		-1,
 		Wx::wxDefaultPosition,
 		[400, 400],
-		wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_HAS_BUTTONS | wxTR_FULL_ROW_HIGHLIGHT | wxTR_NO_LINES
-		#| wxTR_VRULE | wxTR_SHOW_ROOT_LABEL_ONLY
+		wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_HAS_VARIABLE_ROW_HEIGHT
 	);
+
+	# change the styles
+	$self->SetFlag( $self->GetFlag | wxTR_HAS_BUTTONS );
+	$self->SetFlag( $self->GetFlag | wxTR_FULL_ROW_HIGHLIGHT );
+	$self->SetFlag( $self->GetFlag | wxTR_NO_LINES );
+	$self->SetFlag( $self->GetFlag | wxTR_VRULE );
+	$self->SetFlag( $self->GetFlag | wxTR_SHOW_ROOT_LABEL_ONLY );
 
 	# now add the columns
 	$self->AddColumn( "Column Four",	120, wxLIST_FORMAT_LEFT );
@@ -92,6 +99,7 @@ sub new {
 
 	my $root = $self->AddRoot( 'Root Item' );
 	my $item1 = $self->AppendItem( $root, 'First Top Level Tree Item Is Very Long And Can Span Columns' );
+	$self->SetItemHeight( $item1, 120 );
 	$self->SetItemBold( $item1, 1 );
 	$self->SetItemTextColour( $item1, Wx::Colour->new( 22, 14, 135 ));
 	$self->SetItemBackgroundColour( $item1, Wx::Colour->new( 160, 184, 255 ));

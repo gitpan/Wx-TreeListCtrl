@@ -2,18 +2,18 @@ package Wx::TreeListCtrl;
 
 use strict;
 use warnings;
-use Wx::Mini;
+use vars qw( $VERSION );
 
-our @EXPORT_OK = qw();
-our @EXPORT = qw();
+$VERSION = '0.02';
 
-our $VERSION = '0.01';
+push @Wx::EXPORT_OK, qw(
+	wxTR_VRULE
+	wxTR_SHOW_ROOT_LABEL_ONLY
+);
 
 Wx::load_dll( 'core' );
 Wx::load_dll( 'base' );
 Wx::wx_boot( 'Wx::TreeListCtrl', $VERSION );
-
-# Preloaded methods go here.
 
 1;
 __END__
@@ -36,14 +36,28 @@ None by default.
 
 =head2 Exportable constants
 
-  DEFAULT_COL_WIDTH
   wxTR_VIRTUAL
-
+  wxTR_SHOW_ROOT_LABEL_ONLY
+  wxTR_HAS_BUTTONS
+  wxTR_NO_LINES
+  wxTR_LINES_AT_ROOT
+  wxTR_TWIST_BUTTONS
+  wxTR_MULTIPLE
+  wxTR_EXTENDED
+  wxTR_HAS_VARIABLE_ROW_HEIGHT
+  wxTR_EDIT_LABELS
+  wxTR_ROW_LINES
+  wxTR_HIDE_ROOT
+  wxTR_FULL_ROW_HIGHLIGHT
+  wxTR_VIRTUAL
+  wxTR_VRULE
+  wxTR_HRULE
+  wxTR_SHOW_ROOT_LABEL_ONLY
 
 
 =head1 SEE ALSO
 
-L<http://wxperl.sourceforge.net>
+L<http://wxperl.sourceforge.net>, 
 L<http://www.wxwidgets.org>
 
 =head1 AUTHOR
@@ -59,7 +73,7 @@ it under the same terms as Perl itself, either Perl version 5.8.7 or,
 at your option, any later version of Perl 5 you may have available.
 
 This package includes the wxTreeListCtrl source code which you may use
-acording to the the wxWidgets license.
+according to the the wxWidgets license.
 
 The authors of the wxTreeListCtrl package are:
 	Robert Roebling,
