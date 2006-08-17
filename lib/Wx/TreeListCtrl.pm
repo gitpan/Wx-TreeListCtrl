@@ -2,17 +2,39 @@ package Wx::TreeListCtrl;
 
 use strict;
 use warnings;
-use vars qw( $VERSION );
+use vars qw( $VERSION @constants );
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
-push @Wx::EXPORT_OK, qw(
+@constants = qw(
+	wxTL_MODE_NAV_FULLTREE
+	wxTL_MODE_NAV_EXPANDED
+	wxTL_MODE_NAV_VISIBLE
+	wxTL_MODE_NAV_LEVEL
+	wxTL_MODE_FIND_EXACT
+	wxTL_MODE_FIND_PARTIAL
+	wxTL_MODE_FIND_NOCASE
+	wxTR_HAS_BUTTONS
+	wxTR_NO_LINES
+	wxTR_LINES_AT_ROOT
+	wxTR_TWIST_BUTTONS
+	wxTR_MULTIPLE
+	wxTR_EXTENDED
+	wxTR_HAS_VARIABLE_ROW_HEIGHT
+	wxTR_EDIT_LABELS
+	wxTR_ROW_LINES
+	wxTR_HIDE_ROOT
+	wxTR_FULL_ROW_HIGHLIGHT
+	wxTR_VIRTUAL
 	wxTR_VRULE
+	wxTR_HRULE
 	wxTR_SHOW_ROOT_LABEL_ONLY
 );
 
+push @Wx::EXPORT_OK, @constants;
+$Wx::EXPORT_TAGS{'treelist'} = [ @constants ];
+
 Wx::load_dll( 'core' );
-Wx::load_dll( 'base' );
 Wx::wx_boot( 'Wx::TreeListCtrl', $VERSION );
 
 1;

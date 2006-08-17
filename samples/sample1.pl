@@ -69,10 +69,7 @@ sub OnQuit {
 package MyTreeList;
 
 use base qw( Wx::TreeListCtrl );
-use Wx qw( wxLIST_FORMAT_LEFT );
-use Wx qw( wxTR_HIDE_ROOT wxTR_ROW_LINES wxTR_HAS_BUTTONS wxTR_FULL_ROW_HIGHLIGHT wxTR_NO_LINES wxTR_HAS_VARIABLE_ROW_HEIGHT );
-#use Wx::TreeListCtrl qw( wxTR_VRULE wxTR_SHOW_ROOT_LABEL_ONLY );
-use Wx qw( wxTR_VRULE wxTR_SHOW_ROOT_LABEL_ONLY );
+use Wx qw( :listctrl :treelist );
 
 sub new {
 	my ($class, $parent) = @_;
