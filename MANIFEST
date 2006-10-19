@@ -8,8 +8,8 @@ cpp/tl_constants.cpp
 cpp/treelistctrl.cpp
 cpp/treelistctrl.h
 lib/Wx/TreeListCtrl.pm
+lib/Wx/DemoModules/wxTreeList.pm
 samples/sample1.pl
-script/pipe.pl
 t/01_load.t
 XS/TreeListCtrl.xs
 XS/TreeListColumnInfo.xs

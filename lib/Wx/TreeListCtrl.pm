@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use vars qw( $VERSION @constants );
 
-$VERSION = '0.03';
+$VERSION = '0.05';
 
 @constants = qw(
 	wxTL_MODE_NAV_FULLTREE

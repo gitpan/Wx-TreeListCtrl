@@ -1,5 +1,15 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.05  Mon Aug  21 2006
+    - changed build system in accordance with Wx 0.57
+	- removed script/pipe.pl
+
+0.04  Fri Aug  18 2006
+    - added lib/Wx/DemoModules/wxTreeList.pm
+
+0.03  Thu Aug  17 2006
+    - added EXPORT_TAG 'treelist'
+
 0.02  Thu Aug  17 2006
     - fixed exporting of constants
 

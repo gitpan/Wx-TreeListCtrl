@@ -1,5 +1,5 @@
-Wx-TreeListCtrl version 0.02
-============================
+Wx-TreeListCtrl
+===============
 
 A simple wrapper around the wxWidgets class wxTreeListCtrl.
 
