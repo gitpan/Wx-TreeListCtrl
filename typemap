@@ -13,4 +13,7 @@
 TYPEMAP
 
 wxTreeListCtrl *		O_WXOBJECT
-wxTreeListColumnInfo *	O_NON_WXOBJECT
+wxTreeListHeaderWindow *        O_WXOBJECT
+wxTreeListMainWindow *          O_WXOBJECT
+wxTreeListColumnInfo *	    O_NON_WXOBJECT
+

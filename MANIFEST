@@ -5,6 +5,7 @@ README
 TreeListCtrl.xs
 typemap
 cpp/tl_constants.cpp
+cpp/wxtreelist.h
 cpp/treelistctrl.cpp
 cpp/treelistctrl.h
 lib/Wx/TreeListCtrl.pm

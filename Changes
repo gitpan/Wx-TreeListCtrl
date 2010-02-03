@@ -1,5 +1,17 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.06  Feb   2  2010
+      A patched non official version.
+      get the official version from search.cpan.org
+    - Updated to use latest source from wxTreeListCtrl
+      in wxPython dist but added wxTR_SHOW_ROOT_LABEL_ONLY
+      back in.
+    - added GetColumn SetColumn GetCurrentItem SetCurrentItem
+    - confirmed compilation on wxMAC (carbon), wxMSW, wxGTK (linux)
+
+0.051 A patched non official version.
+      get the official version from search.cpan.org
+
 0.05  Mon Aug  21 2006
     - changed build system in accordance with Wx 0.57
 	- removed script/pipe.pl

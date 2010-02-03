@@ -1,6 +1,9 @@
 Wx-TreeListCtrl
 ===============
 
+This is a patched non official version.
+get the official version from search.cpan.org
+
 A simple wrapper around the wxWidgets class wxTreeListCtrl.
 
 INSTALLATION

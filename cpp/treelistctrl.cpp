@@ -4,10 +4,9 @@
 // Author:      Robert Roebling
 // Maintainer:  Otto Wyss
 // Created:     01/02/97
-// Modified:    08/13/06
-// RCS-ID:      $Id: treelistctrl.cpp,v 1.93 2006/01/17 20:46:00 wyo Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) 2004 Robert Roebling, Julian Smart, Alberto Griggio,
-//              Vadim Zeitlin, Otto Wyss , Guru Kathiresan
+//              Vadim Zeitlin, Otto Wyss
 // Licence:     wxWindows
 /////////////////////////////////////////////////////////////////////////////
 
@@ -18,10 +17,6 @@
 // ---------------------------------------------------------------------------
 // headers
 // ---------------------------------------------------------------------------
-
-#if defined(__GNUG__) && !defined(__APPLE__)
-  #pragma implementation "treelistctrl.h"
-#endif
 
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
@@ -38,19 +33,21 @@
 #include <wx/settings.h>
 #include <wx/dcclient.h>
 #include <wx/dcscreen.h>
-#include <wx/scrolwin.h>
-#include <wx/renderer.h>
-#include "treelistctrl.h"
-
-
-#if defined(__WXMSW__) 
 #include <wx/dcmemory.h>
+#include <wx/scrolwin.h>
+#if wxCHECK_VERSION(2, 7, 0)
+#include <wx/renderer.h>
 #endif
-
 
 #ifdef __WXMAC__
-    #include "wx/mac/private.h"
+#ifdef __WXCOCOA__
+#include "wx/osx/private.h"
+#else
+#include "wx/mac/private.h"
 #endif
+#endif
+
+#include "treelistctrl.h"
 
 
 // ---------------------------------------------------------------------------
@@ -69,10 +66,6 @@ WX_DEFINE_ARRAY_PTR(wxTreeListItem *, wxArrayTreeListItems);
 WX_DECLARE_OBJARRAY(wxTreeListColumnInfo, wxArrayTreeListColumnInfo);
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(wxArrayTreeListColumnInfo);
-
-#if !wxCHECK_VERSION(2, 3, 3)
-WX_DEFINE_ARRAY(short, wxArrayShort);
-#endif
 
 
 // --------------------------------------------------------------------------
@@ -114,15 +107,7 @@ protected:
     wxTreeListMainWindow *m_owner;
     const wxCursor *m_currentCursor;
     const wxCursor *m_resizeCursor;
-    bool                 m_isDragging;
-#if defined(__WXMSW__) 
-	HWND				 m_hndlHeader;
-    virtual bool MSWCommand(WXUINT cmd, WXWORD id);
-    virtual bool MSWOnNotify(int idCtrl, WXLPARAM lParam, WXLPARAM *result);
-	void HandleHeaderClicks(const wxEventType &eType,int nItem);
-	void ResetInternalData(void);
-#endif 
-
+    bool m_isDragging;
 
     // column being resized
     int m_column;
@@ -139,13 +124,15 @@ protected:
     // total width of the columns
     int m_total_col_width;
 
+#if wxCHECK_VERSION_FULL(2, 7, 0, 1)
+    // which col header is currently highlighted with mouse-over
+    int m_hotTrackCol;
+
+    int XToCol(int x);
+    void RefreshColLabel(int col);
+#endif
 
 public:
-#if defined(__WXMSW__) 
-	HWND DoCreateHeader(HWND hwndParent);
-	int DoInsertItem(HWND hwndHeader, int iInsertAfter,int nWidth, LPSTR lpsz);
-#endif    
-
     wxTreeListHeaderWindow();
 
     wxTreeListHeaderWindow( wxWindow *win,
@@ -157,7 +144,7 @@ public:
                             const wxString &name = _T("wxtreelistctrlcolumntitles") );
 
     virtual ~wxTreeListHeaderWindow();
-	void SetHeaderFont(const wxFont& font);
+
     void DoDrawRect( wxDC *dc, int x, int y, int w, int h );
     void DrawCurrent();
     void AdjustDC(wxDC& dc);
@@ -177,8 +164,6 @@ public:
     void InsertColumn (int before, const wxTreeListColumnInfo& colInfo);
 
     void RemoveColumn (int column);
-
-	void RemoveAllColumns(void);
 
     // column information manipulation
     const wxTreeListColumnInfo& GetColumn (int column) const{
@@ -263,7 +248,6 @@ public:
                const wxValidator &validator = wxDefaultValidator,
                const wxString& name = _T("wxtreelistmainwindow"))
     {
-		m_styleFlag = style;
         Init();
         Create (parent, id, pos, size, style, validator, name);
     }
@@ -280,15 +264,8 @@ public:
     // accessors
     // ---------
 
-	//Check for Proper Flag
-	bool IsFlagSet(long flag) const;
-
-	//Set Flags for the Control
-	long GetFlag(void) const;
-	void SetFlag(long flag);
-
     // return true if this is a virtual list control
-    bool IsVirtual() const { return IsFlagSet(wxTR_VIRTUAL); }
+    bool IsVirtual() const { return HasFlag(wxTR_VIRTUAL); }
 
     // get the total number of items in the control
     size_t GetCount() const;
@@ -351,7 +328,6 @@ public:
     wxColour GetItemTextColour(const wxTreeItemId& item) const;
     wxColour GetItemBackgroundColour(const wxTreeItemId& item) const;
     wxFont GetItemFont(const wxTreeItemId& item) const;
-	int GetItemHeight(const wxTreeItemId& item) const;
 
     // modifiers
     // ---------
@@ -391,9 +367,6 @@ public:
 
     // set the window font
     virtual bool SetFont( const wxFont &font );
-
-    // set the item's Height
-    virtual void SetItemHeight(const wxTreeItemId& item,const int& ht);
 
     // set the styles.  No need to specify a GetWindowStyle here since
     // the base wxWindow member function will do it for us
@@ -613,6 +586,14 @@ public:
 
     void SetFocus();
 
+    wxTreeItemId GetCurrentItem() const  { return m_curItem; }
+    void SetCurrentItem(const wxTreeItemId& newItem)
+    {
+        wxTreeListItem *oldItem = m_curItem;
+        m_curItem = (wxTreeListItem*)newItem.m_pItem;
+        if (oldItem) RefreshLine(oldItem);
+    }
+
 protected:
     wxTreeListCtrl* m_owner;
 
@@ -627,9 +608,11 @@ protected:
 
     wxTreeListItem       *m_rootItem; // root item
     wxTreeListItem       *m_curItem; // current item, either selected or marked
+    wxTreeListItem       *m_drag_item; // Item being dragged currently
     wxTreeListItem       *m_shiftItem; // item, where the shift key was pressed
     wxTreeListItem       *m_editItem; // item, which is currently edited
     wxTreeListItem       *m_selectItem; // current selected item, not with wxTR_MULTIPLE
+    wxTreeListItem       *m_select_me;
 
     int                  m_curColumn;
 
@@ -644,10 +627,10 @@ protected:
     wxBrush             *m_hilightBrush,
                         *m_hilightUnfocusedBrush;
     bool                 m_hasFocus;
+    bool                 m_should_return;
 public:
     bool                 m_dirty;
 protected:
-	long				 m_styleFlag;
     bool                 m_ownsImageListNormal,
                          m_ownsImageListState,
                          m_ownsImageListButtons;
@@ -681,7 +664,7 @@ protected:
                               int image, int selectedImage,
                               wxTreeItemData *data);
     bool HasButtons(void) const
-        { return (m_imageListButtons) || IsFlagSet (wxTR_TWIST_BUTTONS|wxTR_HAS_BUTTONS); }
+        { return (m_imageListButtons) || HasFlag (wxTR_TWIST_BUTTONS|wxTR_HAS_BUTTONS); }
 
 protected:
     void CalculateLineHeight();
@@ -955,6 +938,29 @@ private:
 // implementation
 // ===========================================================================
 
+
+// ---------------------------------------------------------------------------
+// internal helpers
+// ---------------------------------------------------------------------------
+
+// check if the given item is under another one
+static bool IsDescendantOf(const wxTreeListItem *parent, const wxTreeListItem *item)
+{
+    while ( item )
+    {
+        if ( item == parent )
+        {
+            // item is a descendant of parent
+            return true;
+        }
+
+        item = item->GetItemParent();
+    }
+
+    return false;
+}
+
+
 // ---------------------------------------------------------------------------
 // wxTreeListRenameTimer (internal)
 // ---------------------------------------------------------------------------
@@ -990,7 +996,8 @@ wxEditTextCtrl::wxEditTextCtrl (wxWindow *parent,
                                 int style,
                                 const wxValidator& validator,
                                 const wxString &name)
-    : wxTextCtrl (parent, id, value, pos, size, style|wxSIMPLE_BORDER, validator, name)
+    : wxTextCtrl (parent, id, value, pos, size,
+                  style|wxSIMPLE_BORDER|wxTE_PROCESS_ENTER, validator, name)
 {
     m_res = res;
     m_accept = accept;
@@ -1077,78 +1084,6 @@ void wxEditTextCtrl::OnKillFocus( wxFocusEvent &event )
 //-----------------------------------------------------------------------------
 //  wxTreeListHeaderWindow
 //-----------------------------------------------------------------------------
-#if defined(__WXMSW__) 
-HWND wxTreeListHeaderWindow::DoCreateHeader(HWND hwndParent) 
-{ 
-	HWND hwndHeader; 
-	RECT rcParent; 
-	HDLAYOUT hdl; 
-	WINDOWPOS wp; 
-	
-	// Ensure that the common control DLL is loaded, and then create 
-	// the header control. 
-	//InitCommonControlsEx(); 
-	wxRect newREct = wxWindow::GetRect();
-
-	if ((hwndHeader = CreateWindowEx(0, WC_HEADER, (LPCTSTR) NULL, 
-		WS_CHILD | WS_BORDER | HDS_BUTTONS | HDS_HORZ | HDS_HOTTRACK | HDS_FULLDRAG, 
-		newREct.GetX(), newREct.GetY(), newREct.GetWidth(), newREct.GetHeight()+2, hwndParent, (HMENU)-1, wxGetInstance(), 
-		(LPVOID) NULL)) == NULL) 
-		return (HWND) NULL; 
-	
-	
-
-	// Retrieve the bounding rectangle of the parent window's 
-	// client area, and then request size and position values 
-	// from the header control. 
-	::GetClientRect(hwndParent, &rcParent); 
-	
-	hdl.prc = &rcParent; 
-	hdl.pwpos = &wp; 
-	if (!SendMessage(hwndHeader, HDM_LAYOUT, 0, (LPARAM) &hdl)) 
-		return (HWND) NULL; 
-	
-	// Set the size, position, and visibility of the header control. 
-	SetWindowPos(hwndHeader, wp.hwndInsertAfter, wp.x, wp.y, 
-		wp.cx, wp.cy, wp.flags | SWP_SHOWWINDOW); 
-
-	SetHeaderFont(GetFont());
-	
-	return hwndHeader; 
-} 
-
-// DoInsertItem - inserts an item into a header control. 
-// Returns the index of the new item. 
-// hwndHeader - handle to the header control. 
-// iInsertAfter - index of the previous item. 
-// nWidth - width of the new item. 
-// lpsz - address of the item string. 
-int wxTreeListHeaderWindow::DoInsertItem(HWND hwndHeader, int iInsertAfter,int nWidth, LPSTR lpsz) 
-{ 
-    HDITEM hdi; 
-    int index; 
-	
-    hdi.mask = HDI_TEXT | HDI_FORMAT | HDI_WIDTH; 
-    hdi.pszText = lpsz; 
-    hdi.cxy = nWidth; 
-    hdi.cchTextMax = sizeof(hdi.pszText)/sizeof(hdi.pszText[0]); 
-    hdi.fmt = HDF_LEFT | HDF_STRING; 
-	
-    index = SendMessage(hwndHeader, HDM_INSERTITEM, (WPARAM) iInsertAfter, (LPARAM) &hdi); 
-	SetHeaderFont(GetFont());
-    return index; 
-	
-} 
-#endif    
-
-void wxTreeListHeaderWindow::SetHeaderFont(const wxFont& font)
-{
-#if defined(__WXMSW__) 
-    WXHANDLE hFont = font.GetResourceHandle();
-    (void)::SendMessage(m_hndlHeader, WM_SETFONT, (WPARAM)hFont, TRUE);
-#endif        
-	wxWindow::SetFont(font);
-}
 
 IMPLEMENT_DYNAMIC_CLASS(wxTreeListHeaderWindow,wxWindow);
 
@@ -1164,6 +1099,7 @@ void wxTreeListHeaderWindow::Init()
     m_isDragging = false;
     m_dirty = false;
     m_total_col_width = 0;
+    m_hotTrackCol = -1;
 }
 
 wxTreeListHeaderWindow::wxTreeListHeaderWindow()
@@ -1193,28 +1129,15 @@ wxTreeListHeaderWindow::wxTreeListHeaderWindow( wxWindow *win,
 #else
     SetBackgroundColour (wxSystemSettings::GetColour (wxSYS_COLOUR_BTNFACE));
 #endif
-#if defined(__WXMSW__) 
-	m_hndlHeader = DoCreateHeader(GetHwnd(win));	
-#endif
-
 }
 
 wxTreeListHeaderWindow::~wxTreeListHeaderWindow()
 {
-#if defined(__WXMSW__) 
-	if (m_hndlHeader != NULL)
-		DestroyWindow(m_hndlHeader);
-#endif
     delete m_resizeCursor;
 }
 
 void wxTreeListHeaderWindow::DoDrawRect( wxDC *dc, int x, int y, int w, int h )
 {
-
-#if defined(__WXMSW__)
-	return;
-#endif	
-
 #if !wxCHECK_VERSION(2, 5, 0)
     wxPen pen (wxSystemSettings::GetSystemColour (wxSYS_COLOUR_BTNSHADOW ), 1, wxSOLID);
 #else
@@ -1227,15 +1150,13 @@ void wxTreeListHeaderWindow::DoDrawRect( wxDC *dc, int x, int y, int w, int h )
 #if defined( __WXMAC__  )
     dc->SetPen (pen);
 #else // !GTK, !Mac
-    //dc->SetPen( *wxBLACK_PEN );
-	dc->SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
-
+    dc->SetPen( *wxBLACK_PEN );
 #endif
     dc->DrawLine( x+w-m_corner+1, y, x+w, y+h );  // right (outer)
     dc->DrawRectangle( x, y+h, w+1, 1 );          // bottom (outer)
 
 #if defined( __WXMAC__  )
-    wxPen pen( wxColour( 0x88 , 0x88 , 0x88 ), 1, wxSOLID );
+    pen = wxPen( wxColour( 0x88 , 0x88 , 0x88 ), 1, wxSOLID );
 #endif
     dc->SetPen( pen );
     dc->DrawLine( x+w-m_corner, y, x+w-1, y+h );  // right (inner)
@@ -1260,111 +1181,6 @@ void wxTreeListHeaderWindow::AdjustDC(wxDC& dc)
     // account for the horz scrollbar offset
     dc.SetDeviceOrigin( -x * xpix, 0 );
 }
-#if defined(__WXMSW__) 
-bool wxTreeListHeaderWindow::MSWCommand(WXUINT cmd, WXWORD id)
-{
-    if (cmd == EN_UPDATE)
-    {
-        wxCommandEvent event(wxEVT_COMMAND_TEXT_UPDATED, id);
-        event.SetEventObject( this );
-        //ProcessCommand(event);
-        return true;
-    }
-    else if (cmd == EN_KILLFOCUS)
-    {
-        wxCommandEvent event(wxEVT_KILL_FOCUS, id);
-        event.SetEventObject( this );
-        //ProcessCommand(event);
-        return true;
-    }
-    else
-        return false;
-}
-
-void wxTreeListHeaderWindow::HandleHeaderClicks(const wxEventType &eType,int nItem)
-{
-	wxMouseEvent event;
-	event.m_leftDown = true;
-	event.SetEventType(eType);
-	event.SetEventObject(this);
-	event.m_y = 2;
-	//fixme: I dont know how to get the mouse Position from
-	//the Header Notify Information. replace the above code with it.
-	int nPos = 0;
-	for (int i = 0 ; i < GetColumnCount();i++)
-	{
-		nPos += GetColumn(i).GetWidth();
-		if (i == nItem)
-			break;
-	}
-	if (nPos != 0)
-		nPos--;
-	event.m_x = nPos;
-	m_isDragging = false;
-	OnMouse(event);
-	return;
-}
-
-bool wxTreeListHeaderWindow::MSWOnNotify(int idCtrl, WXLPARAM lParam, WXLPARAM *result)
-{
-    // prepare the event
-    // -----------------
-	bool bDontFall = false;
-    NMHDR *nmhdr = (NMHDR *)lParam;
-
-    // if your compiler is as broken as this, you should really change it: this
-    // code is needed for normal operation! #ifdef below is only useful for
-    // automatic rebuilds which are done with a very old compiler version
-#ifdef HDN_BEGINTRACKA
-
-    // check for messages from the header (in report view)
-    HWND hwndHdr = m_hndlHeader;
-    // is it a message from the header?
-    if ( nmhdr->hwndFrom == hwndHdr )
-    {
-        HD_NOTIFY *nmHDR = (HD_NOTIFY *)nmhdr;
-		
-        switch ( nmhdr->code )
-        {
-			case HDN_ENDTRACK:
-			case HDN_BEGINTRACK:
-			case HDN_ENDDRAG:
-			case HDN_BEGINDRAG:
-			case HDN_ITEMCHANGED:
-					wxWindow::MSWOnNotify(idCtrl, lParam, result);
-					ResetInternalData();
-					this->Refresh();
-					break;
-
-			case HDN_ITEMCLICK:
-					HandleHeaderClicks(wxEVT_LEFT_DOWN,nmHDR->iItem);					
-					break;
-			case HDN_ITEMDBLCLICK:
-					HandleHeaderClicks(wxEVT_LEFT_DCLICK,nmHDR->iItem);
-					ResetInternalData();
-					break;
-        }
-    }
-#endif // defined(HDN_BEGINTRACKA)
-return wxWindow::MSWOnNotify(idCtrl, lParam, result);
-}
-
-void wxTreeListHeaderWindow::ResetInternalData()
-{
-	int colCount = Header_GetItemCount(m_hndlHeader);
-
-	RECT rect;
-	for ( int col = 0; col < colCount; col++ )
-	{
-		if ( Header_GetItemRect(m_hndlHeader, col, &rect) )
-		{
-			wxTreeListColumnInfo &colInfo = this->GetColumn(col);
-			int nWidth = rect.right - rect.left;
-			SetColumnWidth(col,nWidth);
-		}
-	}
-}
-#endif
 
 void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 {
@@ -1373,28 +1189,59 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 #else
     wxPaintDC dc( this );
 #endif
+
     PrepareDC( dc );
     AdjustDC( dc );
 
-	int w, h;
-#if defined(__WXMSW__) 
-    // width and height of the entire header window    
-	int x1 = 0 ,y1 = 0;
-	int w2,h2;
-	m_owner->CalcUnscrolledPosition(0,0,&x1,&y1);
-    GetClientSize( &w, &h );
-	m_owner->GetSize(&w2, &h2);
-	SetWindowPos(m_hndlHeader, HWND_TOP,0-x1-2,y1-2 ,w2+x1+3, h+3, SWP_SHOWWINDOW);
-    return;
-#endif
+    int x = HEADER_OFFSET_X;
 
-    dc.BeginDrawing();
-    dc.SetFont( GetFont() );
-
-    // width and height of the entire header window    
+    // width and height of the entire header window
+    int w, h;
     GetClientSize( &w, &h );
     m_owner->CalcUnscrolledPosition(w, 0, &w, NULL);
     dc.SetBackgroundMode(wxTRANSPARENT);
+
+#if wxCHECK_VERSION_FULL(2, 7, 0, 1)
+    int numColumns = GetColumnCount();
+    for ( int i = 0; i < numColumns && x < w; i++ )
+    {
+        if (!IsColumnShown (i)) continue; // do next column if not shown
+
+        wxHeaderButtonParams params;
+
+        // TODO: columnInfo should have label colours...
+        params.m_labelColour = wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT );
+        params.m_labelFont = GetFont();
+
+        wxTreeListColumnInfo& column = GetColumn(i);
+        int wCol = column.GetWidth();
+        int flags = 0;
+        wxRect rect(x, 0, wCol, h);
+        x += wCol;
+
+        if ( i == m_hotTrackCol)
+            flags |= wxCONTROL_CURRENT;
+
+        params.m_labelText = column.GetText();
+        params.m_labelAlignment = column.GetAlignment();
+
+        int image = column.GetImage();
+        wxImageList* imageList = m_owner->GetImageList();
+        if ((image != -1) && imageList)
+            params.m_labelBitmap = imageList->GetBitmap(image);
+
+        wxRendererNative::Get().DrawHeaderButton(this, dc, rect, flags,
+                                                 wxHDR_SORT_ICON_NONE, &params);
+    }
+
+    if (x < w) {
+        wxRect rect(x, 0, w-x, h);
+        wxRendererNative::Get().DrawHeaderButton(this, dc, rect);
+    }
+
+#else  // not 2.7.0.1+
+
+    dc.SetFont( GetFont() );
 
     // do *not* use the listctrl colour for headers - one day we will have a
     // function to set it separately
@@ -1405,12 +1252,10 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
     dc.SetTextForeground (wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ));
 #endif
 
-    int x = HEADER_OFFSET_X;
-
     int numColumns = GetColumnCount();
     for ( int i = 0; i < numColumns && x < w; i++ )
     {
-        if (!IsColumnShown (i)) continue; // do next colume if not shown
+        if (!IsColumnShown (i)) continue; // do next column if not shown
 
         wxTreeListColumnInfo& column = GetColumn(i);
         int wCol = column.GetWidth();
@@ -1419,11 +1264,13 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
         // inside the column rect
         int cw = wCol - 2;
 
+#if !wxCHECK_VERSION(2, 7, 0)
         dc.SetPen( *wxWHITE_PEN );
         DoDrawRect( &dc, x, HEADER_OFFSET_Y, cw, h-2 );
-		//#ifdef wxHAS_NATIVE_RENDERER
-		//wxRendererNative::GetDefault().DrawHeaderButton(this,dc,wxRect(x, HEADER_OFFSET_Y, cw, h-2));
-		//#else
+#else
+        wxRect rect(x, HEADER_OFFSET_Y, cw, h-2);
+        wxRendererNative::GetDefault().DrawHeaderButton (this, dc, rect);
+#endif
 
         // if we have an image, draw it on the right of the label
         int image = column.GetImage(); //item.m_image;
@@ -1472,18 +1319,18 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 
     int more_w = m_owner->GetSize().x - x - HEADER_OFFSET_X;
     if (more_w > 0) {
+#if !wxCHECK_VERSION(2, 7, 0)
         DoDrawRect (&dc, x, HEADER_OFFSET_Y, more_w, h-2 );
-		//wxRendererNative::GetDefault().DrawHeaderButton(this,dc,wxRect(x, HEADER_OFFSET_Y, more_w, h-2));
+#else
+        wxRect rect (x, HEADER_OFFSET_Y, more_w, h-2);
+        wxRendererNative::GetDefault().DrawHeaderButton (this, dc, rect);
+#endif
     }
-
-    dc.EndDrawing();
+#endif // 2.7.0.1
 }
 
 void wxTreeListHeaderWindow::DrawCurrent()
 {
-#if defined(__WXMSW__) 
-    return;
-#endif
     int x1 = m_currentX;
     int y1 = 0;
     ClientToScreen (&x1, &y1);
@@ -1498,8 +1345,7 @@ void wxTreeListHeaderWindow::DrawCurrent()
 
     wxScreenDC dc;
     dc.SetLogicalFunction (wxINVERT);
-    //dc.SetPen (wxPen (*wxBLACK, 2, wxSOLID));
-	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
+    dc.SetPen (wxPen (*wxBLACK, 2, wxSOLID));
     dc.SetBrush (*wxTRANSPARENT_BRUSH);
 
     AdjustDC(dc);
@@ -1509,12 +1355,78 @@ void wxTreeListHeaderWindow::DrawCurrent()
     dc.SetBrush (wxNullBrush);
 }
 
+#if wxCHECK_VERSION_FULL(2, 7, 0, 1)
+int wxTreeListHeaderWindow::XToCol(int x)
+{
+    int colLeft = 0;
+    int numColumns = GetColumnCount();
+    for ( int col = 0; col < numColumns; col++ )
+    {
+        if (!IsColumnShown(col)) continue;
+        wxTreeListColumnInfo& column = GetColumn(col);
+
+        if ( x < (colLeft + column.GetWidth()) )
+             return col;
+
+        colLeft += column.GetWidth();
+    }
+    return -1;
+}
+
+
+void wxTreeListHeaderWindow::RefreshColLabel(int col)
+{
+    if ( col >= GetColumnCount() )
+        return;
+
+    int x = 0;
+    int width = 0;
+    int idx = 0;
+    do {
+        if (!IsColumnShown(idx)) continue;
+        wxTreeListColumnInfo& column = GetColumn(idx);
+        x += width;
+        width = column.GetWidth();
+    } while (++idx <= col);
+
+    m_owner->CalcScrolledPosition(x, 0, &x, NULL);
+    RefreshRect(wxRect(x, 0, width, GetSize().GetHeight()));
+}
+#endif
+
+
 void wxTreeListHeaderWindow::OnMouse (wxMouseEvent &event) {
 
     // we want to work with logical coords
     int x;
     m_owner->CalcUnscrolledPosition(event.GetX(), 0, &x, NULL);
     int y = event.GetY();
+
+#if wxCHECK_VERSION_FULL(2, 7, 0, 1)
+    if ( event.Moving() )
+    {
+        int col = XToCol(x);
+        if ( col != m_hotTrackCol )
+        {
+            // Refresh the col header so it will be painted with hot tracking
+            // (if supported by the native renderer.)
+            RefreshColLabel(col);
+
+            // Also refresh the old hot header
+            if ( m_hotTrackCol >= 0 )
+                RefreshColLabel(m_hotTrackCol);
+
+            m_hotTrackCol = col;
+        }
+    }
+
+    if ( event.Leaving() && m_hotTrackCol >= 0 )
+    {
+        // Leaving the window so clear any hot tracking indicator that may be present
+        RefreshColLabel(m_hotTrackCol);
+        m_hotTrackCol = -1;
+    }
+#endif
 
     if (m_isDragging) {
 
@@ -1561,10 +1473,7 @@ void wxTreeListHeaderWindow::OnMouse (wxMouseEvent &event) {
             m_column = column;
             if ((abs (x-xpos) < 3) && (y < 22)) {
                 // near the column border
-				#if !defined(__WXMSW__) //This is not required for Windows 
-					hit_border = true;  //because the header control itself
-				#endif					//will handle dragging feature
-                
+                hit_border = true;
                 break;
             }
 
@@ -1627,13 +1536,6 @@ void wxTreeListHeaderWindow::SendListEvent (wxEventType type, wxPoint pos) {
 }
 
 void wxTreeListHeaderWindow::AddColumn (const wxTreeListColumnInfo& colInfo) {
-	
-#if defined(__WXMSW__) 
-	int inPos = m_columns.GetCount();
-	if (inPos != 0)
-		inPos = inPos - 1;
-	DoInsertItem(m_hndlHeader,inPos,colInfo.GetWidth(),(char *)colInfo.GetText().c_str());
-#endif        	
     m_columns.Add (colInfo);
     m_total_col_width += colInfo.GetWidth();
     m_owner->AdjustMyScrollbars();
@@ -1651,9 +1553,6 @@ void wxTreeListHeaderWindow::SetColumnWidth (int column, int width) {
 
 void wxTreeListHeaderWindow::InsertColumn (int before, const wxTreeListColumnInfo& colInfo) {
     wxCHECK_RET ((before >= 0) && (before < GetColumnCount()), _T("Invalid column"));
-#if defined(__WXMSW__)
-    DoInsertItem(m_hndlHeader,before,colInfo.GetWidth(),(char *)colInfo.GetText().c_str());
-#endif
     m_columns.Insert (colInfo, before);
     m_total_col_width += colInfo.GetWidth();
     m_owner->AdjustMyScrollbars();
@@ -1662,20 +1561,12 @@ void wxTreeListHeaderWindow::InsertColumn (int before, const wxTreeListColumnInf
 
 void wxTreeListHeaderWindow::RemoveColumn (int column) {
     wxCHECK_RET ((column >= 0) && (column < GetColumnCount()), _T("Invalid column"));
-
-#if defined(__WXMSW__)
-    Header_DeleteItem(m_hndlHeader,column);
-#endif
     m_total_col_width -= m_columns[column].GetWidth();
     m_columns.RemoveAt (column);
     m_owner->AdjustMyScrollbars();
     m_owner->m_dirty = true;
 }
 
-void wxTreeListHeaderWindow::RemoveAllColumns(void){
-	for (int ki = this->GetColumnCount()-1; ki >=0 ; --ki)
-		this->RemoveColumn(ki);
-}
 void wxTreeListHeaderWindow::SetColumn (int column, const wxTreeListColumnInfo& info) {
     wxCHECK_RET ((column >= 0) && (column < GetColumnCount()), _T("Invalid column"));
     int w = m_columns[column].GetWidth();
@@ -1738,6 +1629,7 @@ void wxTreeListItem::DeleteChildren (wxTreeListMainWindow *tree) {
         if (tree) {
             tree->SendDeleteEvent (child);
             if (tree->m_selectItem == child) tree->m_selectItem = (wxTreeListItem*)NULL;
+            if (tree->m_curItem == child) tree->m_curItem = this;
         }
         child->DeleteChildren (tree);
         delete child;
@@ -1783,7 +1675,7 @@ wxTreeListItem *wxTreeListItem::HitTest (const wxPoint& point,
                                          int &flags, int& column, int level) {
 
     // for a hidden root node, don't evaluate it, but do evaluate children
-    if (!theCtrl->IsFlagSet(wxTR_HIDE_ROOT) || (level > 0)) {
+    if (!theCtrl->HasFlag(wxTR_HIDE_ROOT) || (level > 0)) {
 
         // reset any previous hit infos
         flags = 0;
@@ -1938,11 +1830,14 @@ void wxTreeListMainWindow::Init() {
     m_shiftItem = (wxTreeListItem*)NULL;
     m_editItem = (wxTreeListItem*)NULL;
     m_selectItem = (wxTreeListItem*)NULL;
+    m_select_me = (wxTreeListItem*)NULL;
 
     m_curColumn = -1; // no current column
+    m_drag_item = (wxTreeListItem*)NULL;
 
     m_hasFocus = false;
     m_dirty = false;
+    m_should_return = false;
 
     m_lineHeight = LINEHEIGHT;
     m_indent = MININDENT; // min. indent
@@ -1978,8 +1873,12 @@ void wxTreeListMainWindow::Init() {
 
     m_findTimer = new wxTimer (this, -1);
 
-#if defined( __WXMAC__ ) && defined(__WXMAC_CARBON__)
+#if defined( __WXMAC__ )
+#if defined( __WXCOCOA__ )
+    m_normalFont.MacCreateFromThemeFont (kThemeViewsFont);
+#else
     m_normalFont.MacCreateThemeFont (kThemeViewsFont);
+#endif
 #else
     m_normalFont = wxSystemSettings::GetFont (wxSYS_DEFAULT_GUI_FONT);
 #endif
@@ -2001,8 +1900,6 @@ bool wxTreeListMainWindow::Create (wxTreeListCtrl *parent,
                                    const wxString& name) {
 
 #ifdef __WXMAC__
-    if (style & wxTR_HAS_BUTTONS) style |= wxTR_MAC_BUTTONS;
-    if (style & wxTR_HAS_BUTTONS) style &= ~wxTR_HAS_BUTTONS;
     style &= ~wxTR_LINES_AT_ROOT;
     style |= wxTR_NO_LINES;
 
@@ -2011,7 +1908,7 @@ bool wxTreeListMainWindow::Create (wxTreeListCtrl *parent,
     if (major < 10) style |= wxTR_ROW_LINES;
 #endif
 
-    wxScrolledWindow::Create (parent, id, pos, size, style|wxHSCROLL|wxVSCROLL, name);
+    wxScrolledWindow::Create (parent, id, pos, size, style|wxHSCROLL|wxVSCROLL|wxWANTS_CHARS, name);
 
 #if wxUSE_VALIDATORS
     SetValidator(validator);
@@ -2070,31 +1967,13 @@ wxTreeListMainWindow::~wxTreeListMainWindow() {
 //-----------------------------------------------------------------------------
 // accessors
 //-----------------------------------------------------------------------------
-long wxTreeListMainWindow::GetFlag(void) const {
-	return m_styleFlag;
-}
-
-void wxTreeListMainWindow::SetFlag(long flag){
-	m_styleFlag = flag;
-}
-
-
-bool wxTreeListMainWindow::IsFlagSet(long flag) const{
-
-	if ((m_styleFlag & flag) == 0)
-		return false;
-	else
-		return true;
-}
-
-	
 
 size_t wxTreeListMainWindow::GetCount() const {
     return m_rootItem == NULL? 0: m_rootItem->GetChildrenCount();
 }
 
 void wxTreeListMainWindow::SetIndent (unsigned int indent) {
-    m_indent = wxMax (MININDENT, indent);
+    m_indent = wxMax ((unsigned)MININDENT, indent);
     m_dirty = true;
 }
 
@@ -2154,12 +2033,6 @@ wxFont wxTreeListMainWindow::GetItemFont (const wxTreeItemId& item) const {
     wxCHECK_MSG (item.IsOk(), wxNullFont, _T("invalid tree item"));
     wxTreeListItem *pItem = (wxTreeListItem*) item.m_pItem;
     return pItem->Attr().GetFont();
-}
-
-int wxTreeListMainWindow::GetItemHeight (const wxTreeItemId& item) const {
-    wxCHECK_MSG (item.IsOk(), -1, _T("invalid tree item"));
-    wxTreeListItem *pItem = (wxTreeListItem*) item.m_pItem;
-    return pItem->GetHeight();
 }
 
 void wxTreeListMainWindow::SetItemImage (const wxTreeItemId& item, int column,
@@ -2232,12 +2105,6 @@ bool wxTreeListMainWindow::SetFont (const wxFont &font) {
     return true;
 }
 
-void wxTreeListMainWindow::SetItemHeight (const wxTreeItemId& item, const int &ht){
-    wxCHECK_RET (item.IsOk(),_T("invalid tree item"));
-    wxTreeListItem *pItem = (wxTreeListItem*) item.m_pItem;
-    pItem->SetHeight(ht);
-}
-
 
 // ----------------------------------------------------------------------------
 // item status inquiries
@@ -2250,7 +2117,7 @@ bool wxTreeListMainWindow::IsVisible (const wxTreeItemId& item, bool fullRow) co
     wxTreeListItem *pItem = (wxTreeListItem*) item.m_pItem;
     wxTreeListItem* parent = pItem->GetItemParent();
     while (parent) {
-        if (parent == m_rootItem && IsFlagSet(wxTR_HIDE_ROOT)) break;
+        if (parent == m_rootItem && HasFlag(wxTR_HIDE_ROOT)) break;
         if (!parent->IsExpanded()) return false;
         parent = parent->GetItemParent();
     }
@@ -2367,7 +2234,7 @@ wxTreeItemId wxTreeListMainWindow::GetNextSibling (const wxTreeItemId& item) con
     // get index
     wxArrayTreeListItems& siblings = parent->GetChildren();
     size_t index = siblings.Index (i);
-    wxASSERT (index != wxNOT_FOUND); // I'm not a child of my parent?
+    wxASSERT (index != (size_t)wxNOT_FOUND); // I'm not a child of my parent?
     return (index < siblings.Count()-1)? wxTreeItemId(siblings[index+1]): wxTreeItemId();
 }
 
@@ -2382,7 +2249,7 @@ wxTreeItemId wxTreeListMainWindow::GetPrevSibling (const wxTreeItemId& item) con
     // get index
     wxArrayTreeListItems& siblings = parent->GetChildren();
     size_t index = siblings.Index(i);
-    wxASSERT (index != wxNOT_FOUND); // I'm not a child of my parent?
+    wxASSERT (index != (size_t)wxNOT_FOUND); // I'm not a child of my parent?
     return (index >= 1)? wxTreeItemId(siblings[index-1]): wxTreeItemId();
 }
 
@@ -2513,7 +2380,7 @@ wxTreeItemId wxTreeListMainWindow::AddRoot (const wxString& text,
         data->SetId(m_rootItem);
 #endif
     }
-    if (IsFlagSet(wxTR_HIDE_ROOT)) {
+    if (HasFlag(wxTR_HIDE_ROOT)) {
         // if we will hide the root, make sure children are visible
         m_rootItem->SetHasPlus();
         m_rootItem->Expand();
@@ -2579,7 +2446,7 @@ void wxTreeListMainWindow::SendDeleteEvent (wxTreeListItem *item) {
     event.SetItem (item);
 #endif
     event.SetEventObject (m_owner);
-    m_owner->ProcessEvent (event);
+    m_owner->GetEventHandler()->ProcessEvent (event);
 }
 
 void wxTreeListMainWindow::Delete (const wxTreeItemId& itemId) {
@@ -2599,6 +2466,27 @@ void wxTreeListMainWindow::Delete (const wxTreeItemId& itemId) {
     }
 
     wxTreeListItem *parent = item->GetItemParent();
+
+
+    // m_select_me records whether we need to select
+    // a different item, in idle time.
+    if ( m_select_me && IsDescendantOf(item, m_select_me) )
+    {
+        m_select_me = parent;
+    }
+
+    if ( IsDescendantOf(item, m_curItem) )
+    {
+        // Don't silently change the selection:
+        // do it properly in idle time, so event
+        // handlers get called.
+
+        // m_current = parent;
+        m_curItem = NULL;
+        m_select_me = parent;
+    }
+
+    // remove the item from the tree
     if (parent) {
         parent->GetChildren().Remove (item);  // remove by value
     }
@@ -2607,6 +2495,10 @@ void wxTreeListMainWindow::Delete (const wxTreeItemId& itemId) {
     SendDeleteEvent (item);
     if (m_selectItem == item) m_selectItem = (wxTreeListItem*)NULL;
     item->DeleteChildren (this);
+
+    if (item == m_select_me)
+        m_select_me = NULL;
+
     delete item;
 }
 
@@ -2643,14 +2535,14 @@ void wxTreeListMainWindow::Expand (const wxTreeItemId& itemId) {
     event.SetItem (item);
 #endif
     event.SetEventObject (m_owner);
-    if (m_owner->ProcessEvent (event) && !event.IsAllowed()) return; // expand canceled
+    if (m_owner->GetEventHandler()->ProcessEvent (event) && !event.IsAllowed()) return; // expand canceled
 
     item->Expand();
     m_dirty = true;
 
     // send event to user code
     event.SetEventType (wxEVT_COMMAND_TREE_ITEM_EXPANDED);
-    m_owner->ProcessEvent (event);
+    m_owner->GetEventHandler()->ProcessEvent (event);
 }
 
 void wxTreeListMainWindow::ExpandAll (const wxTreeItemId& itemId) {
@@ -2682,14 +2574,14 @@ void wxTreeListMainWindow::Collapse (const wxTreeItemId& itemId) {
     event.SetItem (item);
 #endif
     event.SetEventObject (m_owner);
-    if (m_owner->ProcessEvent (event) && !event.IsAllowed()) return; // collapse canceled
+    if (m_owner->GetEventHandler()->ProcessEvent (event) && !event.IsAllowed()) return; // collapse canceled
 
     item->Collapse();
     m_dirty = true;
 
     // send event to user code
     event.SetEventType (wxEVT_COMMAND_TREE_ITEM_COLLAPSED);
-    ProcessEvent (event);
+    GetEventHandler()->ProcessEvent (event);
 }
 
 void wxTreeListMainWindow::CollapseAndReset (const wxTreeItemId& item) {
@@ -2751,7 +2643,7 @@ bool wxTreeListMainWindow::TagNextChildren (wxTreeListItem *crt_item,
     wxASSERT (index != wxNOT_FOUND); // I'm not a child of my parent?
 
     if ((parent->HasChildren() && parent->IsExpanded()) ||
-        ((parent == (wxTreeListItem*)GetRootItem().m_pItem) && IsFlagSet(wxTR_HIDE_ROOT))) {
+        ((parent == (wxTreeListItem*)GetRootItem().m_pItem) && HasFlag(wxTR_HIDE_ROOT))) {
         size_t count = children.Count();
         for (size_t n = (index+1); n < count; ++n) {
             if (TagAllChildrenUntilLast (children[n], last_item)) return true;
@@ -2784,7 +2676,7 @@ void wxTreeListMainWindow::SelectItem (const wxTreeItemId& itemId,
                                        bool unselect_others) {
     wxCHECK_RET (itemId.IsOk(), _T("invalid tree item") );
 
-    bool is_single = !IsFlagSet(wxTR_MULTIPLE);
+    bool is_single = !HasFlag(wxTR_MULTIPLE);
     wxTreeListItem *item = (wxTreeListItem*) itemId.m_pItem;
 
     // single selection requires unselect others
@@ -2814,9 +2706,9 @@ void wxTreeListMainWindow::SelectItem (const wxTreeItemId& itemId,
     }
 
     // select item or item range
-    if (lastId.IsOk() && (itemId != lastId)) {
+    if (!is_single && lastId.IsOk() && (itemId != lastId)) {
 
-        if (!unselected) UnselectAll();
+        if (!unselected && unselect_others) UnselectAll();
         wxTreeListItem *last = (wxTreeListItem*) lastId.m_pItem;
 
         // ensure that the position of the item it calculated in any case
@@ -2840,8 +2732,8 @@ void wxTreeListMainWindow::SelectItem (const wxTreeItemId& itemId,
         RefreshLine (item);
         if (unselect_others) {
             m_selectItem = (item->IsSelected())? item: (wxTreeListItem*)NULL;
+            m_curItem = m_selectItem;
         }
-
     }
 
     // send event to user code
@@ -2850,7 +2742,7 @@ void wxTreeListMainWindow::SelectItem (const wxTreeItemId& itemId,
 }
 
 void wxTreeListMainWindow::SelectAll() {
-    wxCHECK_RET (IsFlagSet(wxTR_MULTIPLE), _T("invalid tree style"));
+    wxCHECK_RET (HasFlag(wxTR_MULTIPLE), _T("invalid tree style, must have wxTR_MULTIPLE style to select all items"));
 
     // send event to user code
     wxTreeEvent event (wxEVT_COMMAND_TREE_SEL_CHANGING, m_owner->GetId());
@@ -2871,6 +2763,7 @@ void wxTreeListMainWindow::SelectAll() {
     wxTreeItemId root = GetRootItem();
     wxTreeListItem *first = (wxTreeListItem *)GetFirstChild (root, cookie).m_pItem;
     wxTreeListItem *last = (wxTreeListItem *)GetLastChild (root, cookie).m_pItem;
+    if (!first || !last) return;
     if (!TagAllChildrenUntilLast (first, last)) {
         TagNextChildren (first, last);
     }
@@ -3009,7 +2902,7 @@ wxTreeItemId wxTreeListMainWindow::FindItem (const wxTreeItemId& item, const wxS
 #endif
     if (!next.IsOk()) {
         next = (wxTreeListItem*)GetRootItem().m_pItem;
-        if (IsFlagSet(wxTR_HIDE_ROOT)) {
+        if (HasFlag(wxTR_HIDE_ROOT)) {
             next = (wxTreeListItem*)GetFirstChild (GetRootItem().m_pItem, cookie).m_pItem;
         }
     }
@@ -3038,7 +2931,7 @@ wxTreeItemId wxTreeListMainWindow::FindItem (const wxTreeItemId& item, const wxS
         }
         if (!next.IsOk() && item.IsOk()) {
             next = (wxTreeListItem*)GetRootItem().m_pItem;
-            if (IsFlagSet(wxTR_HIDE_ROOT)) {
+            if (HasFlag(wxTR_HIDE_ROOT)) {
                 next = (wxTreeListItem*)GetNextChild (GetRootItem().m_pItem, cookie).m_pItem;
             }
         }
@@ -3160,10 +3053,11 @@ int wxTreeListMainWindow::GetLineHeight (wxTreeListItem *item) const {
 void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
 
     wxTreeItemAttr *attr = item->GetAttributes();
+    wxArrayTreeListItems& children = item->GetChildren();
+    bool IsRoot = children.GetCount() > 0;
 
     dc.SetFont (GetItemFont (item));
-	wxArrayTreeListItems& children = item->GetChildren();
-	bool IsRoot = children.GetCount() > 0;
+
     wxColour colText;
     if (attr && attr->HasTextColour()) {
         colText = attr->GetTextColour();
@@ -3178,7 +3072,8 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
 
     int total_w = m_owner->GetHeaderWindow()->GetWidth();
     int total_h = GetLineHeight(item);
-    int off_h = IsFlagSet(wxTR_HRULE) ? 1 : 0;
+    int off_h = HasFlag(wxTR_ROW_LINES) ? 1 : 0;
+    int off_w = HasFlag(wxTR_COLUMN_LINES) ? 1 : 0;
     wxDCClipper clipper (dc, 0, item->GetY(), total_w, total_h); // only within line
 
     int text_w = 0, text_h = 0;
@@ -3193,7 +3088,7 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
     }
     dc.SetBrush (wxBrush (colBg, wxSOLID));
     dc.SetPen (*wxTRANSPARENT_PEN);
-    if (IsFlagSet (wxTR_FULL_ROW_HIGHLIGHT)) {
+    if (HasFlag (wxTR_FULL_ROW_HIGHLIGHT)) {
         if (item == m_dragItem) {
             dc.SetBrush (*m_hilightBrush);
 #ifndef __WXMAC__ // don't draw rect outline if we already have the background color
@@ -3201,32 +3096,34 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
 #endif // !__WXMAC__
             dc.SetTextForeground (colTextHilight);
         }else if (item->IsSelected()) {
+#if defined(__WXGTK2__) || defined(__WXMAC__)
+        int flags = wxCONTROL_SELECTED;
+        if (m_hasFocus)
+        {
+            flags |= wxCONTROL_FOCUSED;
+#ifdef __WXMAC__
+            dc.SetTextForeground( *wxWHITE );
+#endif
+        }
+        wxRendererNative::GetDefault().DrawItemSelectionRect( m_owner, dc, wxRect( 0, item->GetY() + off_h, total_w, total_h - off_h ), flags);
+#else
             if (!m_isDragging && m_hasFocus) {
                 dc.SetBrush (*m_hilightBrush);
-#ifndef __WXMAC__ // don't draw rect outline if we already have the background color
-				if (!IsFlagSet(wxTR_ROW_LINES)) 
-				{
-                	//dc.SetPen (*wxBLACK_PEN);
-					dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSHORT_DASH));
-				}
-#endif // !__WXMAC__
+                dc.SetPen (*wxBLACK_PEN);
             }else{
                 dc.SetBrush (*m_hilightUnfocusedBrush);
-#ifndef __WXMAC__ // don't draw rect outline if we already have the background color
                 dc.SetPen (*wxTRANSPARENT_PEN);
-#endif // !__WXMAC__
             }
             dc.SetTextForeground (colTextHilight);
+#endif // defined(__WXGTK2__) || defined(__WXMAC__)
         }else if (item == m_curItem) {
-            //dc.SetPen (m_hasFocus? *wxBLACK_PEN: *wxTRANSPARENT_PEN);
-			if(m_hasFocus)
-				dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
-			else
-				dc.SetPen(*wxTRANSPARENT_PEN);
+            dc.SetPen (m_hasFocus? *wxBLACK_PEN: *wxTRANSPARENT_PEN);
         }else{
             dc.SetTextForeground (colText);
         }
+#if !defined(__WXGTK2__) && !defined(__WXMAC__)
         dc.DrawRectangle (0, item->GetY() + off_h, total_w, total_h - off_h);
+#endif
     }else{
         dc.SetTextForeground (colText);
     }
@@ -3234,23 +3131,22 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
     int text_extraH = (total_h > text_h) ? (total_h - text_h)/2 : 0;
     int img_extraH = (total_h > m_imgHeight)? (total_h-m_imgHeight)/2: 0;
     int x_colstart = 0;
-	int x_coltotal = 0;
     for (int i = 0; i < GetColumnCount(); ++i ) {
         if (!m_owner->GetHeaderWindow()->IsColumnShown(i)) continue;
 
         int col_w = m_owner->GetHeaderWindow()->GetColumnWidth(i);
-		x_coltotal +=  col_w;
+        int cx1= x_colstart, cy1= item->GetY();
+	int cx2= col_w ,  cy2= total_h;
+        // wxDCClipper clipper (dc, x_colstart, item->GetY(), col_w, total_h); // only within column
 
-		int cx1= x_colstart, cy1= item->GetY();
-		int cx2= col_w ,  cy2= total_h;
+        if (HasFlag(wxTR_SHOW_ROOT_LABEL_ONLY) && (IsRoot == true))
+        {
+                cx1= x_colstart; cy1= item->GetY();
+                cx2= m_owner->GetHeaderWindow()->GetWidth(); cy2= total_h;
+        }
+	wxDCClipper clipper (dc,cx1,cy1,cx2,cy2 ); // only within column or the whole
+						   //according to flag wxTR_SHOW_ROOT_LABEL_ONLY
 
-		if (IsFlagSet(wxTR_SHOW_ROOT_LABEL_ONLY) && (IsRoot == true))
-		{
-			cx1= x_colstart; cy1= item->GetY();
-			cx2= m_owner->GetHeaderWindow()->GetWidth(); cy2= total_h;
-		}
-		wxDCClipper clipper (dc,cx1,cy1,cx2,cy2 ); // only within column or the whole
-												   //according to flag wxTR_SHOW_ROOT_LABEL_ONLY
         int x = 0;
         int image = NO_IMAGE;
         int image_w = 0;
@@ -3277,19 +3173,19 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
             break;
         case wxALIGN_RIGHT:
             dc.GetTextExtent (text, &text_w, NULL);
-            w = col_w - (image_w + text_w + MARGIN);
+            w = col_w - (image_w + text_w + off_w + MARGIN);
             x += (w > 0)? w: 0;
             break;
         case wxALIGN_CENTER:
             dc.GetTextExtent(text, &text_w, NULL);
-            w = (col_w - (image_w + text_w + MARGIN))/2;
+            w = (col_w - (image_w + text_w + off_w + MARGIN))/2;
             x += (w > 0)? w: 0;
             break;
         }
         int text_x = x + image_w;
         if (i == GetMainColumn()) item->SetTextX (text_x);
 
-        if (!IsFlagSet (wxTR_FULL_ROW_HIGHLIGHT)) {
+        if (!HasFlag (wxTR_FULL_ROW_HIGHLIGHT)) {
             if (i == GetMainColumn()) {
                 if (item == m_dragItem) {
                     dc.SetBrush (*m_hilightBrush);
@@ -3298,30 +3194,47 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
 #endif // !__WXMAC__
                     dc.SetTextForeground (colTextHilight);
                 }else if (item->IsSelected()) {
+#if defined(__WXGTK2__) || defined(__WXMAC__)
+                    int flags = wxCONTROL_SELECTED;
+                    if (m_hasFocus)
+                    {
+                        flags |= wxCONTROL_FOCUSED;
+#ifdef __WXMAC__
+                        dc.SetTextForeground( *wxWHITE );
+#endif
+                    }
+                    wxRendererNative::GetDefault().DrawItemSelectionRect( m_owner, dc, wxRect( 0, item->GetY() + off_h, total_w, total_h - off_h ), flags);
+#else
                     if (!m_isDragging && m_hasFocus) {
                         dc.SetBrush (*m_hilightBrush);
-#ifndef __WXMAC__ // don't draw rect outline if we already have the background color
                         dc.SetPen (*wxBLACK_PEN);
-#endif // !__WXMAC__
                     }else{
                         dc.SetBrush (*m_hilightUnfocusedBrush);
-#ifndef __WXMAC__ // don't draw rect outline if we already have the background color
-                      dc.SetPen (*wxTRANSPARENT_PEN);
-#endif // !__WXMAC__
+                        dc.SetPen (*wxTRANSPARENT_PEN);
                     }
                     dc.SetTextForeground (colTextHilight);
+#endif // defined(__WXGTK2__) || defined(__WXMAC__)
                 }else if (item == m_curItem) {
-					if(m_hasFocus)
-						dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
-					else
-						dc.SetPen (*wxTRANSPARENT_PEN);
+                    dc.SetPen (m_hasFocus? *wxBLACK_PEN: *wxTRANSPARENT_PEN);
                 }else{
                     dc.SetTextForeground (colText);
                 }
+#if !defined(__WXGTK2__) && !defined(__WXMAC__)
                 dc.DrawRectangle (text_x, item->GetY() + off_h, text_w, total_h - off_h);
+#endif
             }else{
                 dc.SetTextForeground (colText);
             }
+        }
+
+        if (HasFlag(wxTR_COLUMN_LINES)) { // vertical lines between columns
+#if !wxCHECK_VERSION(2, 5, 0)
+            wxPen pen (wxSystemSettings::GetSystemColour (wxSYS_COLOUR_3DLIGHT ), 1, wxSOLID);
+#else
+            wxPen pen (wxSystemSettings::GetColour (wxSYS_COLOUR_3DLIGHT ), 1, wxSOLID);
+#endif
+            dc.SetPen ((GetBackgroundColour() == *wxWHITE)? pen: *wxWHITE_PEN);
+            dc.DrawLine (x_colstart+col_w-1, item->GetY(), x_colstart+col_w-1, item->GetY()+total_h);
         }
 
         dc.SetBackgroundMode (wxTRANSPARENT);
@@ -3331,51 +3244,21 @@ void wxTreeListMainWindow::PaintItem (wxTreeListItem *item, wxDC& dc) {
             m_imageListNormal->Draw (image, dc, x, y, wxIMAGELIST_DRAW_TRANSPARENT );
         }
         int text_y = item->GetY() + text_extraH;
-		if (!IsFlagSet(wxTR_SHOW_ROOT_LABEL_ONLY))
-		{
-			dc.DrawText (text, (wxCoord)text_x, (wxCoord)text_y);
-		}
-		else
-		{
-			if ((IsRoot == true) && (i == 0))
-			{  //Draw Text Until the end
-				dc.DrawText (text, (wxCoord)text_x, (wxCoord)text_y);
-			}
-			else
-				dc.DrawText (text, (wxCoord)text_x, (wxCoord)text_y);
-
-		}		
-		if (IsFlagSet(wxTR_VRULE) ) {
-			if (!IsFlagSet(wxTR_SHOW_ROOT_LABEL_ONLY))
-			{		
-				if((GetBackgroundColour() == *wxWHITE))
-					dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
-				else
-					dc.SetPen (*(wxWHITE_PEN));
-				//dc.DrawLine(x_colstart+1,text_y,x_colstart+1,text_y+total_h);
-				//if (i == GetColumnCount() -1)
-					dc.DrawLine(x_colstart+col_w-2,text_y,x_colstart+col_w-2,text_y+total_h);
-			}
-		}
-		
-		//We dont paint other columns if we have wxTR_SHOW_ROOT_LABEL_ONLY
-		if (IsFlagSet(wxTR_SHOW_ROOT_LABEL_ONLY) && (IsRoot == true))
-		{
-			break;
-		}
+        dc.DrawText (text, (wxCoord)text_x, (wxCoord)text_y);
 
         x_colstart += col_w;
     }
+
     // restore normal font
     dc.SetFont( m_normalFont );
-
 }
 
 // Now y stands for the top of the item, whereas it used to stand for middle !
 void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                                        int level, int &y, int x_maincol) {
+
     // Handle hide root (only level 0)
-    if (IsFlagSet(wxTR_HIDE_ROOT) && (level == 0)) {
+    if (HasFlag(wxTR_HIDE_ROOT) && (level == 0)) {
         wxArrayTreeListItems& children = item->GetChildren();
         for (size_t n = 0; n < children.Count(); n++) {
             PaintLevel (children[n], dc, 1, y, x_maincol);
@@ -3386,13 +3269,13 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
 
     // calculate position of vertical lines
     int x = x_maincol + MARGIN; // start of column
-    if (IsFlagSet(wxTR_LINES_AT_ROOT)) x += LINEATROOT; // space for lines at root
+    if (HasFlag(wxTR_LINES_AT_ROOT)) x += LINEATROOT; // space for lines at root
     if (HasButtons()) {
         x += (m_btnWidth-m_btnWidth2); // half button space
     }else{
         x += (m_indent-m_indent/2);
     }
-    if (IsFlagSet(wxTR_HIDE_ROOT)) {
+    if (HasFlag(wxTR_HIDE_ROOT)) {
         x += m_indent * (level-1); // indent but not level 1
     }else{
         x += m_indent * level; // indent according to level
@@ -3412,19 +3295,19 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
 
     if (IsExposed(exposed_x, exposed_y, 10000, h)) { // 10000 = very much
 
-        if (IsFlagSet(wxTR_HRULE)) { // horizontal lines between rows
+        if (HasFlag(wxTR_ROW_LINES)) { // horizontal lines between rows
             //dc.DestroyClippingRegion();
             int total_width = m_owner->GetHeaderWindow()->GetWidth();
-            // if the  background colour is white, choose a
+            // if the background colour is white, choose a
             // contrasting color for the lines
-			if((GetBackgroundColour() == *wxWHITE))
-				dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT),1, wxSOLID));
-			else
-				dc.SetPen (*(wxWHITE_PEN));
-            dc.DrawLine(0, y_top, total_width, y_top);
-            dc.DrawLine(0, y_top+h, total_width, y_top+h);
-			dc.DrawLine(0, y_top, total_width, y_top+h);
-			
+#if !wxCHECK_VERSION(2, 5, 0)
+            wxPen pen (wxSystemSettings::GetSystemColour (wxSYS_COLOUR_3DLIGHT ), 1, wxSOLID);
+#else
+            wxPen pen (wxSystemSettings::GetColour (wxSYS_COLOUR_3DLIGHT ), 1, wxSOLID);
+#endif
+            dc.SetPen ((GetBackgroundColour() == *wxWHITE)? pen: *wxWHITE_PEN);
+            dc.DrawLine (0, y_top, total_width, y_top);
+            dc.DrawLine (0, y_top+h, total_width, y_top+h);
         }
 
         // draw item
@@ -3439,7 +3322,7 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                             GetColumn(m_main_column).GetWidth();
         wxDCClipper clipper(dc, x_maincol, y_top, clip_width, 10000);
 
-        if (!IsFlagSet(wxTR_NO_LINES)) { // connection lines
+        if (!HasFlag(wxTR_NO_LINES)) { // connection lines
 
             // draw the horizontal line here
             dc.SetPen(m_dottedPen);
@@ -3472,7 +3355,7 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                 m_imageListButtons->Draw (image, dc, xx, yy, wxIMAGELIST_DRAW_TRANSPARENT);
                 dc.DestroyClippingRegion();
 
-            }else if (IsFlagSet (wxTR_TWIST_BUTTONS)) {
+            }else if (HasFlag (wxTR_TWIST_BUTTONS)) {
 
                 // draw the twisty button here
                 dc.SetPen(*wxBLACK_PEN);
@@ -3495,15 +3378,10 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                 }
                 dc.DrawPolygon(3, button);
 
-            }else{ // if (IsFlagSet(wxTR_HAS_BUTTONS))
-				
-				#ifdef wxHAS_NATIVE_RENDERER
-				int btnflag = 0;
-				if (item->IsExpanded())
-					btnflag = wxCONTROL_EXPANDED;
-				wxRendererNative::GetDefault().DrawTreeItemButton(this,dc,wxRect(x-m_btnWidth2, y_mid-m_btnHeight2, m_btnWidth, m_btnHeight),btnflag);
-				#else
+            }else{ // if (HasFlag(wxTR_HAS_BUTTONS))
+
                 // draw the plus sign here
+#if !wxCHECK_VERSION(2, 7, 0)
                 dc.SetPen(*wxGREY_PEN);
                 dc.SetBrush(*wxWHITE_BRUSH);
                 dc.DrawRectangle (x-m_btnWidth2, y_mid-m_btnHeight2, m_btnWidth, m_btnHeight);
@@ -3512,7 +3390,11 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
                 if (!item->IsExpanded()) { // change "-" to "+"
                     dc.DrawLine (x, y_mid-(m_btnHeight2-2), x, y_mid+(m_btnHeight2-1));
                 }
-				#endif ///wxHAS_NATIVE_RENDERER
+#else
+                wxRect rect (x-m_btnWidth2, y_mid-m_btnHeight2, m_btnWidth, m_btnHeight);
+                int flag = item->IsExpanded()? wxCONTROL_EXPANDED: 0;
+                wxRendererNative::GetDefault().DrawTreeItemButton (this, dc, rect, flag);
+#endif
 
             }
 
@@ -3548,7 +3430,7 @@ void wxTreeListMainWindow::PaintLevel (wxTreeListItem *item, wxDC &dc,
 
             // draw vertical line
             wxDCClipper clipper(dc, x_maincol, y_top, clip_width, 10000);
-            if (!IsFlagSet (wxTR_NO_LINES)) {
+            if (!HasFlag (wxTR_NO_LINES)) {
                 x = item->GetX();
                 dc.DrawLine (x, oldY, x, y2);
                 oldY = y2;
@@ -3635,7 +3517,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
     bool curItemSet = false;
     if (!m_curItem) {
         m_curItem = (wxTreeListItem*)GetRootItem().m_pItem;
-        if (IsFlagSet(wxTR_HIDE_ROOT)) {
+        if (HasFlag(wxTR_HIDE_ROOT)) {
 #if !wxCHECK_VERSION(2, 5, 0)
             long cookie = 0;
 #else
@@ -3648,7 +3530,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
     if (!m_curItem) return; // do nothing if empty tree
 
     // remember item at shift down
-    if (IsFlagSet(wxTR_MULTIPLE) && event.ShiftDown()) {
+    if (HasFlag(wxTR_MULTIPLE) && event.ShiftDown()) {
         if (!m_shiftItem) m_shiftItem = m_curItem;
     }else{
         m_shiftItem = (wxTreeListItem*)NULL;
@@ -3700,7 +3582,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
         // <BKSP>: go to the parent without collapsing
         case WXK_BACK: {
             newItem = GetItemParent (m_curItem);
-            if ((newItem == GetRootItem()) && IsFlagSet(wxTR_HIDE_ROOT)) {
+            if ((newItem == GetRootItem()) && HasFlag(wxTR_HIDE_ROOT)) {
                 newItem = GetPrevSibling (m_curItem); // get sibling instead of root
             }
         }break;
@@ -3719,7 +3601,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
                 }
             }else {
                 newItem = GetItemParent (m_curItem);
-                if ((newItem == GetRootItem()) && IsFlagSet(wxTR_HIDE_ROOT)) {
+                if ((newItem == GetRootItem()) && HasFlag(wxTR_HIDE_ROOT)) {
                     newItem = (wxTreeItemId*)NULL; // don't go to root if it is hidden
                 }
             }
@@ -3731,7 +3613,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
                 Collapse (m_curItem);
             }else{
                 newItem = GetItemParent (m_curItem);
-                if ((newItem == GetRootItem()) && IsFlagSet(wxTR_HIDE_ROOT)) {
+                if ((newItem == GetRootItem()) && HasFlag(wxTR_HIDE_ROOT)) {
                     newItem = GetPrevSibling (m_curItem); // go to sibling if it is hidden
                 }
             }
@@ -3789,7 +3671,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
         // <HOME>: go to root
         case WXK_HOME: {
             newItem = GetRootItem();
-            if (IsFlagSet(wxTR_HIDE_ROOT)) {
+            if (HasFlag(wxTR_HIDE_ROOT)) {
 #if !wxCHECK_VERSION(2, 5, 0)
                 long cookie = 0;
 #else
@@ -3803,7 +3685,7 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
         default:
             if (event.GetKeyCode() >= (int)' ') {
                 if (!m_findTimer->IsRunning()) m_findStr.Clear();
-                m_findStr.Append (event.GetKeyCode());
+                m_findStr.Append ((char)event.GetKeyCode());
                 m_findTimer->Start (FIND_TIMER_TICKS, wxTIMER_ONE_SHOT);
                 wxTreeItemId prev = m_curItem? (wxTreeItemId*)m_curItem: (wxTreeItemId*)NULL;
                 while (true) {
@@ -3822,15 +3704,14 @@ void wxTreeListMainWindow::OnChar (wxKeyEvent &event) {
     if (newItem) {
         if (!event.ControlDown()) {
             bool unselect_others = !((event.ShiftDown() || event.ControlDown()) &&
-                                      IsFlagSet(wxTR_MULTIPLE));
+                                      HasFlag(wxTR_MULTIPLE));
             SelectItem (newItem, m_shiftItem, unselect_others);
         }
         EnsureVisible (newItem);
         wxTreeListItem *oldItem = m_curItem;
         m_curItem = (wxTreeListItem*)newItem.m_pItem; // make the new item the current item
-        RefreshLine (oldItem);
+        if (oldItem) RefreshLine (oldItem);
     }
-
 }
 
 wxTreeItemId wxTreeListMainWindow::HitTest (const wxPoint& point, int& flags, int& column) {
@@ -3984,9 +3865,12 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
                                                 this, flags, m_curColumn, 0);
 
     // we only process dragging here
-    if (event.Dragging()){
+    if (event.Dragging() && m_should_return) {
         if (m_isDragging) return; // nothing to do, already done
         if (item == NULL) return; // we need an item to dragging
+        else{
+            SetCurrentItem( item );
+        }
 
         // determine drag start
         if (m_dragCount == 0) {
@@ -4009,10 +3893,11 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
         wxTreeEvent nevent (command, m_owner->GetId());
         nevent.SetEventObject (m_owner);
 #if !wxCHECK_VERSION(2, 5, 0)
-        nevent.SetItem ((long)item); // the item the drag is ended
+        nevent.SetItem ((long)m_drag_item); // the item the drag is ended
 #else
-        nevent.SetItem (item); // the item the drag is ended
+        nevent.SetItem (m_drag_item); // the item the drag is ended
 #endif
+        nevent.SetPoint (p);
         nevent.Veto(); // dragging must be explicit allowed!
         m_owner->GetEventHandler()->ProcessEvent (nevent);
 
@@ -4033,6 +3918,7 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
         nevent.SetItem (item); // the item the drag is started
 #endif
         nevent.SetPoint (p);
+        m_drag_item = (wxTreeListItem *)NULL;
         m_owner->GetEventHandler()->ProcessEvent (nevent);
 
     }else if (m_dragCount > 0) { // just in case dragging is initiated
@@ -4070,7 +3956,7 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
         m_owner->GetEventHandler()->ProcessEvent (nevent);
 
     }else if (event.LeftUp()) {
-
+        m_should_return = false;
         if (m_lastOnSame) {
             if ((item == m_curItem) && (m_curColumn != -1) &&
                 (m_owner->GetHeaderWindow()->IsColumnEditable (m_curColumn)) &&
@@ -4095,7 +3981,7 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
         // determine the selection if not done by left down
         if (!m_left_down_selection) {
             bool unselect_others = !((event.ShiftDown() || event.ControlDown()) &&
-                                     IsFlagSet(wxTR_MULTIPLE));
+                                     HasFlag(wxTR_MULTIPLE));
             SelectItem (item, m_shiftItem, unselect_others);
             EnsureVisible (item);
             m_curItem = item; // make the new item the current item
@@ -4106,6 +3992,10 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
     }else if (event.LeftDown() || event.RightDown() || event.LeftDClick()) {
 
         if (event.LeftDown() || event.RightDown()) {
+            if (event.LeftDown( )){
+                m_drag_item = item;
+                m_should_return = true;
+            }
             SetFocus();
             m_lastOnSame = item == m_curItem;
         }
@@ -4124,9 +4014,11 @@ void wxTreeListMainWindow::OnMouse (wxMouseEvent &event) {
 
         // determine the selection if the current item is not selected
         if (!item->IsSelected()) {
+            if ( !m_should_return) return;
             bool unselect_others = !((event.ShiftDown() || event.ControlDown()) &&
-                                     IsFlagSet(wxTR_MULTIPLE));
+                                     HasFlag(wxTR_MULTIPLE));
             SelectItem (item, m_shiftItem, unselect_others);
+            m_should_return = true;
             EnsureVisible (item);
             m_curItem = item; // make the new item the current item
             m_left_down_selection = true;
@@ -4171,8 +4063,22 @@ void wxTreeListMainWindow::OnIdle (wxIdleEvent &WXUNUSED(event)) {
      * we actually redraw the tree when everything is over */
 
     if (!m_dirty) return;
-
     m_dirty = false;
+
+    // Check if we need to select the root item
+    // because nothing else has been selected.
+    // Delaying it means that we can invoke event handlers
+    // as required, when a first item is selected.
+    if (!m_owner->HasFlag(wxTR_MULTIPLE) && !m_owner->GetSelection().IsOk())
+    {
+        if (m_select_me)
+            m_owner->SelectItem(m_select_me);
+        else if (m_owner->GetRootItem().IsOk())
+            m_owner->SelectItem(m_owner->GetRootItem());
+        m_select_me = NULL;
+        m_curItem = (wxTreeListItem*)m_owner->GetSelection().m_pItem;
+
+    }
 
     CalculatePositions();
     Refresh();
@@ -4222,20 +4128,20 @@ void wxTreeListMainWindow::CalculateLevel (wxTreeListItem *item, wxDC &dc,
 
     // calculate position of vertical lines
     int x = x_colstart + MARGIN; // start of column
-    if (IsFlagSet(wxTR_LINES_AT_ROOT)) x += LINEATROOT; // space for lines at root
+    if (HasFlag(wxTR_LINES_AT_ROOT)) x += LINEATROOT; // space for lines at root
     if (HasButtons()) {
         x += (m_btnWidth-m_btnWidth2); // half button space
     }else{
         x += (m_indent-m_indent/2);
     }
-    if (IsFlagSet(wxTR_HIDE_ROOT)) {
+    if (HasFlag(wxTR_HIDE_ROOT)) {
         x += m_indent * (level-1); // indent but not level 1
     }else{
         x += m_indent * level; // indent according to level
     }
 
     // a hidden root is not evaluated, but its children are always
-    if (IsFlagSet(wxTR_HIDE_ROOT) && (level == 0)) goto Recurse;
+    if (HasFlag(wxTR_HIDE_ROOT) && (level == 0)) goto Recurse;
 
     CalculateSize( item, dc );
 
@@ -4279,6 +4185,7 @@ void wxTreeListMainWindow::CalculatePositions() {
 
 void wxTreeListMainWindow::RefreshSubtree (wxTreeListItem *item) {
     if (m_dirty) return;
+    wxCHECK_RET (item != NULL, _T("bug : invalid item in wxTreeListMainWindow::RefreshSubtree") );
 
     wxClientDC dc(this);
     PrepareDC(dc);
@@ -4299,6 +4206,7 @@ void wxTreeListMainWindow::RefreshSubtree (wxTreeListItem *item) {
 
 void wxTreeListMainWindow::RefreshLine (wxTreeListItem *item) {
     if (m_dirty) return;
+    wxCHECK_RET (item != NULL, _T("bug : invalid item in wxTreeListMainWindow::RefreshLine") );
 
     wxClientDC dc(this);
     PrepareDC( dc );
@@ -4408,7 +4316,7 @@ int wxTreeListMainWindow::GetItemWidth (int column, wxTreeListItem *item) {
     int width = w + 2*MARGIN;
     if (column == GetMainColumn()) {
         width += MARGIN;
-        if (IsFlagSet(wxTR_LINES_AT_ROOT)) width += LINEATROOT;
+        if (HasFlag(wxTR_LINES_AT_ROOT)) width += LINEATROOT;
         if (HasButtons()) width += m_btnWidth + LINEATROOT;
         if (item->GetCurrentImage() != NO_IMAGE) width += m_imgWidth;
 
@@ -4416,7 +4324,7 @@ int wxTreeListMainWindow::GetItemWidth (int column, wxTreeListItem *item) {
         int level = 0;
         wxTreeListItem *parent = item->GetItemParent();
         wxTreeListItem *root = (wxTreeListItem*)GetRootItem().m_pItem;
-        while (parent && (!IsFlagSet(wxTR_HIDE_ROOT) || (parent != root))) {
+        while (parent && (!HasFlag(wxTR_HIDE_ROOT) || (parent != root))) {
             level++;
             parent = parent->GetItemParent();
         }
@@ -4435,7 +4343,7 @@ int wxTreeListMainWindow::GetBestColumnWidth (int column, wxTreeItemId parent) {
     if (!parent.IsOk()) parent = GetRootItem();
 
     // add root width
-    if (!IsFlagSet(wxTR_HIDE_ROOT)) {
+    if (!HasFlag(wxTR_HIDE_ROOT)) {
         int w = GetItemWidth (column, (wxTreeListItem*)parent.m_pItem);
         if (width < w) width = w;
         if (width > maxWidth) return maxWidth;
@@ -4498,12 +4406,15 @@ bool wxTreeListCtrl::Create(wxWindow *parent, wxWindowID id,
 void wxTreeListCtrl::CalculateAndSetHeaderHeight()
 {
     if (m_header_win) {
-
+        int h;
+#if wxCHECK_VERSION_FULL(2, 7, 0, 1)
+        h = wxRendererNative::Get().GetHeaderButtonHeight(m_header_win);
+#else
         // we use 'g' to get the descent, too
-        int w, h, d;
+        int w, d;
         m_header_win->GetTextExtent(_T("Hg"), &w, &h, &d);
         h += d + 2 * HEADER_OFFSET_Y + EXTRA_HEIGHT;
-
+#endif
         // only update if changed
         if (h != m_headerHeight) {
             m_headerHeight = h;
@@ -4529,9 +4440,6 @@ void wxTreeListCtrl::OnSize(wxSizeEvent& WXUNUSED(event))
 {
     DoHeaderLayout();
 }
-
-void wxTreeListCtrl::SetFlag(long flag) {m_main_win->SetFlag(flag); }
-long wxTreeListCtrl::GetFlag(void) const {return m_main_win->GetFlag();}
 
 size_t wxTreeListCtrl::GetCount() const { return m_main_win->GetCount(); }
 
@@ -4597,9 +4505,6 @@ wxColour wxTreeListCtrl::GetItemBackgroundColour(const wxTreeItemId& item)
 wxFont wxTreeListCtrl::GetItemFont(const wxTreeItemId& item) const
 { return m_main_win->GetItemFont(item); }
 
-int wxTreeListCtrl::GetItemHeight(const wxTreeItemId& item)
-{ return m_main_win->GetItemHeight(item); }
-
 
 void wxTreeListCtrl::SetItemText(const wxTreeItemId& item, int column,
                                  const wxString& text)
@@ -4636,7 +4541,7 @@ void wxTreeListCtrl::SetItemFont(const wxTreeItemId& item,
 bool wxTreeListCtrl::SetFont(const wxFont& font)
 {
     if (m_header_win) {
-		m_header_win->SetHeaderFont(font);
+        m_header_win->SetFont(font);
         CalculateAndSetHeaderHeight();
         m_header_win->Refresh();
     }
@@ -4646,11 +4551,6 @@ bool wxTreeListCtrl::SetFont(const wxFont& font)
         return false;
     }
 }
-
-void wxTreeListCtrl::SetItemHeight(const wxTreeItemId& item,
-                                 const int& ht)
-{ m_main_win->SetItemHeight(item, ht); }
-
 
 void wxTreeListCtrl::SetWindowStyle(const long style)
 {
@@ -4697,6 +4597,13 @@ size_t wxTreeListCtrl::GetSelections(wxArrayTreeItemIds& arr) const
 
 wxTreeItemId wxTreeListCtrl::GetItemParent(const wxTreeItemId& item) const
 { return m_main_win->GetItemParent(item); }
+
+wxTreeItemId wxTreeListCtrl::GetCurrentItem() const
+{ return m_main_win->GetCurrentItem(); }
+
+void wxTreeListCtrl::SetCurrentItem(const wxTreeItemId& newItem)
+{ m_main_win->SetCurrentItem(newItem); }
+
 
 #if !wxCHECK_VERSION(2, 5, 0)
 wxTreeItemId wxTreeListCtrl::GetFirstChild (const wxTreeItemId& item,
@@ -4846,8 +4753,7 @@ void wxTreeListCtrl::ScrollTo(const wxTreeItemId& item)
 
 wxTreeItemId wxTreeListCtrl::HitTest(const wxPoint& pos, int& flags, int& column)
 {
-    wxPoint p = m_main_win->ScreenToClient (ClientToScreen (pos));
-    return m_main_win->HitTest (p, flags, column);
+    return m_main_win->HitTest (pos, flags, column);
 }
 
 bool wxTreeListCtrl::GetBoundingRect(const wxTreeItemId& item, wxRect& rect,
@@ -4892,6 +4798,18 @@ int wxTreeListCtrl::GetColumnCount() const
 
 void wxTreeListCtrl::SetColumnWidth(int column, int width)
 {
+    if (width == wxLIST_AUTOSIZE_USEHEADER)
+    {
+        wxFont font = m_header_win->GetFont();
+        m_header_win->GetTextExtent(m_header_win->GetColumnText(column), &width, NULL, NULL, NULL, font.Ok()? &font: NULL);
+        //search wxTreeListHeaderWindow::OnPaint to understand this:
+        width += 2*EXTRA_WIDTH + MARGIN;
+    }
+    else if (width == wxLIST_AUTOSIZE)
+    {
+        width = m_main_win->GetBestColumnWidth(column);
+    }
+
     m_header_win->SetColumnWidth (column, width);
     m_header_win->Refresh();
 }
@@ -4929,12 +4847,6 @@ void wxTreeListCtrl::InsertColumn(int before, const wxTreeListColumnInfo& colInf
 void wxTreeListCtrl::RemoveColumn(int column)
 {
     m_header_win->RemoveColumn (column);
-    m_header_win->Refresh();
-}
-
-void wxTreeListCtrl::RemoveAllColumns(void)
-{
-    m_header_win->RemoveAllColumns ();
     m_header_win->Refresh();
 }
 

@@ -4,54 +4,36 @@
 // Author:      Robert Roebling
 // Maintainer:  Otto Wyss
 // Created:     01/02/97
-// Modified:    08/13/06
-// RCS-ID:      $Id: treelistctrl.h,v 1.32 2005/10/06 19:31:30 wyo Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) 2004 Robert Roebling, Julian Smart, Alberto Griggio,
-//              Vadim Zeitlin, Otto Wyss , Guru Kathiresan
-// Licence:     wxWindows
+//              Vadim Zeitlin, Otto Wyss
+// Licence:     wxWindows license
 /////////////////////////////////////////////////////////////////////////////
 
 
 #ifndef TREELISTCTRL_H
 #define TREELISTCTRL_H
 
-#if defined(__GNUG__) && !defined(__APPLE__)
-    #pragma interface "treelistctrl.h"
-#endif
-
 #include <wx/treectrl.h>
 #include <wx/control.h>
 #include <wx/pen.h>
 #include <wx/listctrl.h> // for wxListEvent
 
-#ifdef __WXMSW__    
-    #include "commctrl.h"
-#endif        	    
+#ifdef GIZMOISDLL
+#define GIZMODLLEXPORT WXDLLEXPORT
+#else
+#define GIZMODLLEXPORT
+#endif
 
-class WXDLLEXPORT_TREE wxTreeListItem;
-class WXDLLEXPORT_TREE wxTreeListHeaderWindow;
-class WXDLLEXPORT_TREE wxTreeListMainWindow;
 
-/*
-#define wxTR_HAS_BUTTONS             0x0001     // draw collapsed/expanded btns
-#define wxTR_NO_LINES                0x0004     // don't draw lines at all
-#define wxTR_LINES_AT_ROOT           0x0008     // connect top-level nodes
-#define wxTR_TWIST_BUTTONS           0x0010     // still used by wxTreeListCtrl
+class GIZMODLLEXPORT wxTreeListItem;
+class GIZMODLLEXPORT wxTreeListHeaderWindow;
+class GIZMODLLEXPORT wxTreeListMainWindow;
 
-#define wxTR_MULTIPLE                0x0020     // can select multiple items
-#define wxTR_EXTENDED                0x0040     // TODO: allow extended selection
-#define wxTR_HAS_VARIABLE_ROW_HEIGHT 0x0080     // what it says
+#define wxTR_COLUMN_LINES            0x1000 // put border around items
+#define wxTR_VIRTUAL                 0x4000 // The application provides items text on demand.
+#define wxTR_SHOW_ROOT_LABEL_ONLY    0x8000
 
-#define wxTR_EDIT_LABELS             0x0200     // can edit item labels
-#define wxTR_ROW_LINES               0x0400     // put border around items
-#define wxTR_HIDE_ROOT               0x0800     // don't display root node
-
-#define wxTR_FULL_ROW_HIGHLIGHT      0x2000     // highlight full horz space
-*/
-#define wxTR_VIRTUAL    			 0x4000
-#define wxTR_VRULE    			     0x8000
-#define wxTR_HRULE    			     wxTR_ROW_LINES
-#define wxTR_SHOW_ROOT_LABEL_ONLY    0x0002
 // Using this typedef removes an ambiguity when calling Remove()
 #ifdef __WXMSW__
 #if !wxCHECK_VERSION(2, 5, 0)
@@ -69,7 +51,7 @@ enum {
     DEFAULT_COL_WIDTH = 100
 };
 
-class WXDLLEXPORT_TREE wxTreeListColumnInfo: public wxObject {
+class GIZMODLLEXPORT wxTreeListColumnInfo: public wxObject {
 
 public:
     wxTreeListColumnInfo (const wxString &text = wxEmptyString,
@@ -149,10 +131,10 @@ const int wxTL_MODE_FIND_NOCASE  = 0x0020;
 
 // additional flag for HitTest
 const int wxTREE_HITTEST_ONITEMCOLUMN = 0x2000;
-extern WXDLLEXPORT_TREE const wxChar* wxTreeListCtrlNameStr;
+extern GIZMODLLEXPORT const wxChar* wxTreeListCtrlNameStr;
 
 
-class WXDLLEXPORT_TREE wxTreeListCtrl : public wxControl
+class GIZMODLLEXPORT wxTreeListCtrl : public wxControl
 {
 public:
     // creation
@@ -185,8 +167,6 @@ public:
     void SetFocus();
     // accessors
     // ---------
-	void SetFlag(long flag);
-	long GetFlag(void) const;
 
     // get the total number of items in the control
     size_t GetCount() const;
@@ -254,9 +234,6 @@ public:
     // deletes the given column - does not delete the corresponding column
     void RemoveColumn (int column);
 
-	// deletes all the columns
-	void RemoveAllColumns(void);
-
     // returns the number of columns in the ctrl
     int GetColumnCount() const;
 
@@ -285,7 +262,7 @@ public:
 
     void SetColumnEditable (int column, bool edit = true);
     bool IsColumnEditable (int column) const;
-	
+
     // Functions to work with items.
 
     // accessors
@@ -311,7 +288,6 @@ public:
     wxColour GetItemTextColour (const wxTreeItemId& item) const;
     wxColour GetItemBackgroundColour (const wxTreeItemId& item) const;
     wxFont GetItemFont (const wxTreeItemId& item) const;
-	int GetItemHeight(const wxTreeItemId& item);
 
     // modifiers
 
@@ -348,8 +324,6 @@ public:
 
     // set the item's font (should be of the same height for all items)
     void SetItemFont (const wxTreeItemId& item, const wxFont& font);
-
-	void SetItemHeight(const wxTreeItemId& item , const int& ht);
 
     // set the window font
     virtual bool SetFont ( const wxFont &font );
@@ -397,6 +371,9 @@ public:
 
     // get the parent of this item (may return NULL if root)
     wxTreeItemId GetItemParent (const wxTreeItemId& item) const;
+
+    wxTreeItemId GetCurrentItem() const;
+    void SetCurrentItem(const wxTreeItemId& newItem);
 
     // for this enumeration function you must pass in a "cookie" parameter
     // which is opaque for the application but is necessary for the library
