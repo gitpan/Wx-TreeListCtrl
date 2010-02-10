@@ -1,3 +1,13 @@
+/////////////////////////////////////////////////////////////////////////////
+// Name:        tl_constants.cpp
+// Purpose:     wxPerl constants
+// Author:      Mark Wardell
+// SVN ID:      $Id:$
+// Copyright:   (c) 2006 - 2010 Mark Wardell
+// Licence:     This program is free software; you can redistribute it and/or
+//              modify it under the same terms as Perl itself
+/////////////////////////////////////////////////////////////////////////////
+
 
 #include <cpp/constants.h>
 

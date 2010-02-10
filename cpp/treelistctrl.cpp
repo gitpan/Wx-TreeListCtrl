@@ -63,7 +63,7 @@ WX_DEFINE_ARRAY_PTR(wxTreeListItem *, wxArrayTreeListItems);
 #endif
 
 #include <wx/dynarray.h>
-WX_DECLARE_OBJARRAY(wxTreeListColumnInfo, wxArrayTreeListColumnInfo);
+WX_DECLARE_OBJARRAY(wxTreeListColumnInfoInternal, wxArrayTreeListColumnInfo);
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(wxArrayTreeListColumnInfo);
 
@@ -91,7 +91,7 @@ static const int RENAME_TIMER_TICKS = 250; // minimum rename wait time in ms
 
 const wxChar* wxTreeListCtrlNameStr = _T("treelistctrl");
 
-static wxTreeListColumnInfo wxInvalidTreeListColumnInfo;
+static wxTreeListColumnInfoInternal wxInvalidTreeListColumnInfo;
 
 
 // ---------------------------------------------------------------------------
@@ -159,24 +159,24 @@ public:
     // column manipulation
     int GetColumnCount() const { return m_columns.GetCount(); }
 
-    void AddColumn (const wxTreeListColumnInfo& colInfo);
+    void AddColumn (const wxTreeListColumnInfoInternal& colInfo);
 
-    void InsertColumn (int before, const wxTreeListColumnInfo& colInfo);
+    void InsertColumn (int before, const wxTreeListColumnInfoInternal& colInfo);
 
     void RemoveColumn (int column);
 
     // column information manipulation
-    const wxTreeListColumnInfo& GetColumn (int column) const{
+    const wxTreeListColumnInfoInternal& GetColumn (int column) const{
         wxCHECK_MSG ((column >= 0) && (column < GetColumnCount()),
                      wxInvalidTreeListColumnInfo, _T("Invalid column"));
         return m_columns[column];
     }
-    wxTreeListColumnInfo& GetColumn (int column) {
+    wxTreeListColumnInfoInternal& GetColumn (int column) {
         wxCHECK_MSG ((column >= 0) && (column < GetColumnCount()),
                      wxInvalidTreeListColumnInfo, _T("Invalid column"));
         return m_columns[column];
     }
-    void SetColumn (int column, const wxTreeListColumnInfo& info);
+    void SetColumn (int column, const wxTreeListColumnInfoInternal& info);
 
     wxString GetColumnText (int column) const {
         wxCHECK_MSG ((column >= 0) && (column < GetColumnCount()),
@@ -1213,7 +1213,7 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
         params.m_labelColour = wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT );
         params.m_labelFont = GetFont();
 
-        wxTreeListColumnInfo& column = GetColumn(i);
+        wxTreeListColumnInfoInternal& column = GetColumn(i);
         int wCol = column.GetWidth();
         int flags = 0;
         wxRect rect(x, 0, wCol, h);
@@ -1257,7 +1257,7 @@ void wxTreeListHeaderWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
     {
         if (!IsColumnShown (i)) continue; // do next column if not shown
 
-        wxTreeListColumnInfo& column = GetColumn(i);
+        wxTreeListColumnInfoInternal& column = GetColumn(i);
         int wCol = column.GetWidth();
 
         // the width of the rect to draw: make it smaller to fit entirely
@@ -1363,7 +1363,7 @@ int wxTreeListHeaderWindow::XToCol(int x)
     for ( int col = 0; col < numColumns; col++ )
     {
         if (!IsColumnShown(col)) continue;
-        wxTreeListColumnInfo& column = GetColumn(col);
+        wxTreeListColumnInfoInternal& column = GetColumn(col);
 
         if ( x < (colLeft + column.GetWidth()) )
              return col;
@@ -1384,7 +1384,7 @@ void wxTreeListHeaderWindow::RefreshColLabel(int col)
     int idx = 0;
     do {
         if (!IsColumnShown(idx)) continue;
-        wxTreeListColumnInfo& column = GetColumn(idx);
+        wxTreeListColumnInfoInternal& column = GetColumn(idx);
         x += width;
         width = column.GetWidth();
     } while (++idx <= col);
@@ -1535,7 +1535,7 @@ void wxTreeListHeaderWindow::SendListEvent (wxEventType type, wxPoint pos) {
     parent->GetEventHandler()->ProcessEvent (le);
 }
 
-void wxTreeListHeaderWindow::AddColumn (const wxTreeListColumnInfo& colInfo) {
+void wxTreeListHeaderWindow::AddColumn (const wxTreeListColumnInfoInternal& colInfo) {
     m_columns.Add (colInfo);
     m_total_col_width += colInfo.GetWidth();
     m_owner->AdjustMyScrollbars();
@@ -1551,7 +1551,7 @@ void wxTreeListHeaderWindow::SetColumnWidth (int column, int width) {
     m_owner->m_dirty = true;
 }
 
-void wxTreeListHeaderWindow::InsertColumn (int before, const wxTreeListColumnInfo& colInfo) {
+void wxTreeListHeaderWindow::InsertColumn (int before, const wxTreeListColumnInfoInternal& colInfo) {
     wxCHECK_RET ((before >= 0) && (before < GetColumnCount()), _T("Invalid column"));
     m_columns.Insert (colInfo, before);
     m_total_col_width += colInfo.GetWidth();
@@ -1567,7 +1567,7 @@ void wxTreeListHeaderWindow::RemoveColumn (int column) {
     m_owner->m_dirty = true;
 }
 
-void wxTreeListHeaderWindow::SetColumn (int column, const wxTreeListColumnInfo& info) {
+void wxTreeListHeaderWindow::SetColumn (int column, const wxTreeListColumnInfoInternal& info) {
     wxCHECK_RET ((column >= 0) && (column < GetColumnCount()), _T("Invalid column"));
     int w = m_columns[column].GetWidth();
     m_columns[column] = info;
@@ -4832,13 +4832,13 @@ void wxTreeListCtrl::SetColumnText(int column, const wxString& text)
 wxString wxTreeListCtrl::GetColumnText(int column) const
 { return m_header_win->GetColumnText(column); }
 
-void wxTreeListCtrl::AddColumn(const wxTreeListColumnInfo& colInfo)
+void wxTreeListCtrl::AddColumn(const wxTreeListColumnInfoInternal& colInfo)
 {
     m_header_win->AddColumn (colInfo);
     DoHeaderLayout();
 }
 
-void wxTreeListCtrl::InsertColumn(int before, const wxTreeListColumnInfo& colInfo)
+void wxTreeListCtrl::InsertColumn(int before, const wxTreeListColumnInfoInternal& colInfo)
 {
     m_header_win->InsertColumn (before, colInfo);
     m_header_win->Refresh();
@@ -4850,16 +4850,16 @@ void wxTreeListCtrl::RemoveColumn(int column)
     m_header_win->Refresh();
 }
 
-void wxTreeListCtrl::SetColumn(int column, const wxTreeListColumnInfo& colInfo)
+void wxTreeListCtrl::SetColumn(int column, const wxTreeListColumnInfoInternal& colInfo)
 {
     m_header_win->SetColumn (column, colInfo);
     m_header_win->Refresh();
 }
 
-const wxTreeListColumnInfo& wxTreeListCtrl::GetColumn(int column) const
+const wxTreeListColumnInfoInternal& wxTreeListCtrl::GetColumn(int column) const
 { return m_header_win->GetColumn(column); }
 
-wxTreeListColumnInfo& wxTreeListCtrl::GetColumn(int column)
+wxTreeListColumnInfoInternal& wxTreeListCtrl::GetColumn(int column)
 { return m_header_win->GetColumn(column); }
 
 void wxTreeListCtrl::SetColumnImage(int column, int image)

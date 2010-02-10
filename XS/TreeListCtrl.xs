@@ -5,7 +5,7 @@
 # Modified by:
 # Created:     08/08/2006
 # RCS-ID:      $Id: TreeListCtrl.xs,v 1.00 2006/08/08 10:31:01 $
-# Copyright:   (c) 2006 Mark Wardell
+# Copyright:   (c) 2006 - 2010 Mark Wardell
 # Licence:     This program is free software; you can redistribute it and/or
 #              modify it under the same terms as Perl itself
 ##################################################################################
@@ -155,8 +155,8 @@ void
 wxTreeListCtrl::AddColumn( ... )
     PPCODE:
     BEGIN_OVERLOAD()
-        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_s_n_n_n_n_n, AddColumnFull, 1 )
         MATCH_REDISP_COUNT( wxPliOvl_wtlc, AddColumnInfo, 1 )
+        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_s_n_n_n_n_n, AddColumnFull, 1 )
     END_OVERLOAD( Wx::TreeListCtrl::AddColumn )
 
 void
@@ -170,18 +170,19 @@ wxTreeListCtrl::AddColumnFull ( text, width = DEFAULT_COL_WIDTH, flag = wxALIGN_
   CODE:
     THIS->AddColumn( text, width, flag, image, shown, edit );
 
+
 void
 wxTreeListCtrl::AddColumnInfo ( colInfo )
-	wxTreeListColumnInfo* colInfo
+    wxTreeListColumnInfo* colInfo
   CODE:
-    THIS->AddColumn( *colInfo );
+    THIS->AddColumn( colInfo->GetInternalInfoObject() );
 
 void
 wxTreeListCtrl::InsertColumn( ... )
     PPCODE:
     BEGIN_OVERLOAD()
-        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_n_s_n_n_n_n_n, InsertColumnFull, 2 )
         MATCH_REDISP_COUNT( wxPliOvl_n_wtlc, InsertColumnInfo, 2 )
+        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_n_s_n_n_n_n_n, InsertColumnFull, 2 )
     END_OVERLOAD( Wx::TreeListCtrl::InsertColumn )
 
 void
@@ -198,14 +199,14 @@ wxTreeListCtrl::InsertColumnFull ( before, text, width = DEFAULT_COL_WIDTH, flag
 
 void
 wxTreeListCtrl::InsertColumnInfo ( before, colInfo )
-	int before
-	wxTreeListColumnInfo* colInfo
+    int before
+    wxTreeListColumnInfo* colInfo
   CODE:
-    THIS->InsertColumn( before, *colInfo );
+    THIS->InsertColumn( before, colInfo->GetInternalInfoObject() );
 
 void
 wxTreeListCtrl::RemoveColumn ( column )
-	int column 
+    int column 
 
 int
 wxTreeListCtrl::GetColumnCount()
@@ -219,11 +220,11 @@ wxTreeListCtrl::GetMainColumn()
 
 
 void
-wxTreeListCtrl::SetColumn( column, colinfo )
+wxTreeListCtrl::SetColumn( column, colInfo )
     int column
-    wxTreeListColumnInfo* colinfo
+    wxTreeListColumnInfo* colInfo
   CODE:
-    THIS->SetColumn( column, *colinfo );
+    THIS->SetColumn( column, colInfo->GetInternalInfoObject() );
     
 wxTreeListColumnInfo*
 wxTreeListCtrl::GetColumn( column )
@@ -974,11 +975,6 @@ wxTreeListCtrl::DoGetBestSize()
     RETVAL = new wxSize( THIS->DoGetBestSize() );
   OUTPUT:
     RETVAL
-
-
-
-
-
 
 
 MODULE=Wx__TreeListCtrl

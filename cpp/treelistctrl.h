@@ -4,12 +4,13 @@
 // Author:      Robert Roebling
 // Maintainer:  Otto Wyss
 // Created:     01/02/97
-// RCS-ID:      $Id$
 // Copyright:   (c) 2004 Robert Roebling, Julian Smart, Alberto Griggio,
 //              Vadim Zeitlin, Otto Wyss
 // Licence:     wxWindows license
 /////////////////////////////////////////////////////////////////////////////
-
+// Additions for wxPerl copyright (c) 2010 Mark Dootson
+// SVN ID:      $Id:$
+/////////////////////////////////////////////////////////////////////////////
 
 #ifndef TREELISTCTRL_H
 #define TREELISTCTRL_H
@@ -51,10 +52,10 @@ enum {
     DEFAULT_COL_WIDTH = 100
 };
 
-class GIZMODLLEXPORT wxTreeListColumnInfo: public wxObject {
+class GIZMODLLEXPORT wxTreeListColumnInfoInternal: public wxObject {
 
 public:
-    wxTreeListColumnInfo (const wxString &text = wxEmptyString,
+    wxTreeListColumnInfoInternal (const wxString &text = wxEmptyString,
                           int width = DEFAULT_COL_WIDTH,
                           int flag = wxALIGN_LEFT,
                           int image = -1,
@@ -69,7 +70,7 @@ public:
         m_edit = edit;
     }
 
-    wxTreeListColumnInfo (const wxTreeListColumnInfo& other) {
+    wxTreeListColumnInfoInternal (const wxTreeListColumnInfoInternal& other) {
         m_text = other.m_text;
         m_width = other.m_width;
         m_flag = other.m_flag;
@@ -78,31 +79,31 @@ public:
         m_shown = other.m_shown;
         m_edit = other.m_edit;
     }
-
-    ~wxTreeListColumnInfo() {}
+    
+    ~wxTreeListColumnInfoInternal() {}
 
     // get/set
     wxString GetText() const { return m_text; }
-    wxTreeListColumnInfo& SetText (const wxString& text) { m_text = text; return *this; }
+    wxTreeListColumnInfoInternal& SetText (const wxString& text) { m_text = text; return *this; }
 
     int GetWidth() const { return m_width; }
-    wxTreeListColumnInfo& SetWidth (int width) { m_width = width; return *this; }
+    wxTreeListColumnInfoInternal& SetWidth (int width) { m_width = width; return *this; }
 
     int GetAlignment() const { return m_flag; }
-    wxTreeListColumnInfo& SetAlignment (int flag) { m_flag = flag; return *this; }
+    wxTreeListColumnInfoInternal& SetAlignment (int flag) { m_flag = flag; return *this; }
 
     int GetImage() const { return m_image; }
-    wxTreeListColumnInfo& SetImage (int image) { m_image = image; return *this; }
+    wxTreeListColumnInfoInternal& SetImage (int image) { m_image = image; return *this; }
 
     int GetSelectedImage() const { return m_selected_image; }
-    wxTreeListColumnInfo& SetSelectedImage (int image) { m_selected_image = image; return *this; }
+    wxTreeListColumnInfoInternal& SetSelectedImage (int image) { m_selected_image = image; return *this; }
 
     bool IsEditable() const { return m_edit; }
-    wxTreeListColumnInfo& SetEditable (bool edit)
+    wxTreeListColumnInfoInternal& SetEditable (bool edit)
         { m_edit = edit; return *this; }
 
     bool IsShown() const { return m_shown; }
-    wxTreeListColumnInfo& SetShown(bool shown) { m_shown = shown; return *this; }
+    wxTreeListColumnInfoInternal& SetShown(bool shown) { m_shown = shown; return *this; }
 
 private:
     wxString m_text;
@@ -113,6 +114,163 @@ private:
     bool m_shown;
     bool m_edit;
 };
+
+//-----------------------------------------------------------------------------
+// wxTreeListColumnInfo - wxPerl Proxy
+//-----------------------------------------------------------------------------
+
+class GIZMODLLEXPORT wxTreeListColumnInfo: public wxObject {
+
+public:
+    wxTreeListColumnInfo();
+    
+    wxTreeListColumnInfo (const wxString &text,
+                          int width,
+                          int flag,
+                          int image,
+                          bool shown,
+                          bool edit); 
+
+    wxTreeListColumnInfo (const wxTreeListColumnInfo& other);
+    
+    wxTreeListColumnInfo ( const wxTreeListColumnInfoInternal& other); 
+
+    ~wxTreeListColumnInfo() {};
+    
+    bool Create(const wxString &text,int width,int flag,
+                          int image ,
+                          bool shown,
+                          bool edit);
+
+    // get/set
+    wxString GetText() const;
+    void SetText (const wxString& text) ;
+
+    int GetWidth() const;
+    void SetWidth (int width);
+
+    int GetAlignment() const;
+    void SetAlignment (int flag);
+
+    int GetImage() const;
+    void SetImage (int image);
+
+    int GetSelectedImage() const;
+    void SetSelectedImage (int image) ;
+
+    bool IsEditable() const;
+    void SetEditable (bool edit);
+
+    bool IsShown() const;
+    void SetShown(bool shown);
+    
+    wxTreeListColumnInfoInternal& GetInternalInfoObject() const;
+
+private:
+    wxString m_text;
+    int m_width;
+    int m_flag;
+    int m_image;
+    int m_selected_image;
+    bool m_shown;
+    bool m_edit;
+    DECLARE_DYNAMIC_CLASS(wxTreeListColumnInfo)
+    
+};
+
+IMPLEMENT_DYNAMIC_CLASS(wxTreeListColumnInfo, wxObject);
+
+wxTreeListColumnInfo::wxTreeListColumnInfo() {
+        m_text = wxEmptyString;
+        m_width = DEFAULT_COL_WIDTH;
+        m_flag = wxALIGN_LEFT;
+        m_image = -1;
+        m_selected_image = -1;
+        m_shown = true;
+        m_edit = false;
+    }
+    
+wxTreeListColumnInfo::wxTreeListColumnInfo (const wxString &text = wxEmptyString,
+                          int width = DEFAULT_COL_WIDTH,
+                          int flag = wxALIGN_LEFT,
+                          int image = -1,
+                          bool shown = true,
+                          bool edit = false) {
+        m_text = text;
+        m_width = width;
+        m_flag = flag;
+        m_image = image;
+        m_selected_image = -1;
+        m_shown = shown;
+        m_edit = edit;
+    }
+
+wxTreeListColumnInfo::wxTreeListColumnInfo (const wxTreeListColumnInfo& other) {
+        m_text = other.m_text;
+        m_width = other.m_width;
+        m_flag = other.m_flag;
+        m_image = other.m_image;
+        m_selected_image = other.m_selected_image;
+        m_shown = other.m_shown;
+        m_edit = other.m_edit;
+    }
+    
+wxTreeListColumnInfo::wxTreeListColumnInfo ( const wxTreeListColumnInfoInternal& other) {
+        m_text = other.GetText();
+        m_width = other.GetWidth();
+        m_flag = other.GetAlignment();
+        m_image = other.GetImage();
+        m_selected_image = other.GetSelectedImage();
+        m_shown = other.IsShown();
+        m_edit = other.IsEditable();
+    }
+    
+bool wxTreeListColumnInfo::Create(const wxString &text = wxEmptyString,
+                          int width = DEFAULT_COL_WIDTH,
+                          int flag = wxALIGN_LEFT,
+                          int image = -1,
+                          bool shown = true,
+                          bool edit = false) {
+        m_text = text;
+        m_width = width;
+        m_flag = flag;
+        m_image = image;
+        m_selected_image = -1;
+        m_shown = shown;
+        m_edit = edit;
+        return true;
+    }
+
+// get/set
+wxString wxTreeListColumnInfo::GetText() const { return m_text; }
+void wxTreeListColumnInfo::SetText (const wxString& text) { m_text = text; }
+
+int wxTreeListColumnInfo::GetWidth() const { return m_width; }
+void wxTreeListColumnInfo::SetWidth (int width) { m_width = width; }
+
+int wxTreeListColumnInfo::GetAlignment() const { return m_flag; }
+void wxTreeListColumnInfo::SetAlignment (int flag) { m_flag = flag; }
+
+int wxTreeListColumnInfo::GetImage() const { return m_image; }
+void wxTreeListColumnInfo::SetImage (int image) { m_image = image; }
+
+int wxTreeListColumnInfo::GetSelectedImage() const { return m_selected_image; }
+void wxTreeListColumnInfo::SetSelectedImage (int image) { m_selected_image = image; }
+
+bool wxTreeListColumnInfo::IsEditable() const { return m_edit; }
+void wxTreeListColumnInfo::SetEditable (bool edit) { m_edit = edit; }
+
+bool wxTreeListColumnInfo::IsShown() const { return m_shown; }
+void wxTreeListColumnInfo::SetShown(bool shown) { m_shown = shown; }
+
+wxTreeListColumnInfoInternal& wxTreeListColumnInfo::GetInternalInfoObject() const {
+    wxTreeListColumnInfoInternal * realinfo;
+    realinfo = new wxTreeListColumnInfoInternal(m_text, m_width, m_flag, m_image, m_shown, m_edit);
+    realinfo->SetSelectedImage( m_selected_image );
+    return  *realinfo;
+}
+
+
 
 //----------------------------------------------------------------------------
 // wxTreeListCtrl - the multicolumn tree control
@@ -214,9 +372,9 @@ public:
                     int image = -1,
                     bool shown = true,
                     bool edit = false) {
-        AddColumn (wxTreeListColumnInfo (text, width, flag, image, shown, edit));
+        AddColumn (wxTreeListColumnInfoInternal (text, width, flag, image, shown, edit));
     }
-    void AddColumn (const wxTreeListColumnInfo& colInfo);
+    void AddColumn (const wxTreeListColumnInfoInternal& colInfo);
 
     // inserts a column before the given one
     void InsertColumn (int before,
@@ -227,9 +385,9 @@ public:
                        bool shown = true,
                        bool edit = false) {
         InsertColumn (before,
-                      wxTreeListColumnInfo (text, width, flag, image, shown, edit));
+                      wxTreeListColumnInfoInternal (text, width, flag, image, shown, edit));
     }
-    void InsertColumn (int before, const wxTreeListColumnInfo& colInfo);
+    void InsertColumn (int before, const wxTreeListColumnInfoInternal& colInfo);
 
     // deletes the given column - does not delete the corresponding column
     void RemoveColumn (int column);
@@ -241,9 +399,9 @@ public:
     void SetMainColumn (int column);
     int GetMainColumn() const;
 
-    void SetColumn (int column, const wxTreeListColumnInfo& colInfo);
-    wxTreeListColumnInfo& GetColumn (int column);
-    const wxTreeListColumnInfo& GetColumn (int column) const;
+    void SetColumn (int column, const wxTreeListColumnInfoInternal& colInfo);
+    wxTreeListColumnInfoInternal& GetColumn (int column);
+    const wxTreeListColumnInfoInternal& GetColumn (int column) const;
 
     void SetColumnText (int column, const wxString& text);
     wxString GetColumnText (int column) const;

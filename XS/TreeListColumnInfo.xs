@@ -5,7 +5,7 @@
 # Modified by:
 # Created:     08/08/2006
 # RCS-ID:      $Id: TreeListColumnInfo.xs,v 1.00 2006/08/08 10:31:01 $
-# Copyright:   (c) 2006 Mark Wardell
+# Copyright:   (c) 2006 - 2010 Mark Wardell
 # Licence:     This program is free software; you can redistribute it and/or
 #              modify it under the same terms as Perl itself
 ##################################################################################
@@ -40,104 +40,75 @@ newCopy( CLASS, other )
 wxTreeListColumnInfo*
 newFull( CLASS, text, width = DEFAULT_COL_WIDTH, flag = wxALIGN_LEFT, image = -1, shown = true, edit = false )
     PlClassName CLASS
-	wxString text
-	int width
-	int flag
-	int image
-	bool shown
-	bool edit
+    wxString text
+    int width
+    int flag
+    int image
+    bool shown
+    bool edit
   CODE:
     RETVAL = new wxTreeListColumnInfo( text, width, flag, image, shown, edit );
   OUTPUT:
     RETVAL
 
+static void
+wxTreeListColumnInfo::CLONE()
+  CODE:
+    wxPli_thread_sv_clone( aTHX_ CLASS, (wxPliCloneSV)wxPli_detach_object );
+
+void
+wxTreeListColumnInfo::DESTROY()
+  CODE:
+    wxPli_thread_sv_unregister( aTHX_ wxPli_get_class( aTHX_ ST(0) ), THIS, ST(0) );
+    delete THIS;
 
 wxString
 wxTreeListColumnInfo::GetText()
 
-
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetText( text )
     wxString text
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetText( text ) );
-  OUTPUT:
-    RETVAL
 
 int
 wxTreeListColumnInfo::GetWidth()
 
-
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetWidth( width )
     int width
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetWidth( width ) );
-  OUTPUT:
-    RETVAL
-
 
 int
 wxTreeListColumnInfo::GetAlignment()
 
-
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetAlignment( flag )
     int flag
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetAlignment( flag ) );
-  OUTPUT:
-    RETVAL
-
 
 int
 wxTreeListColumnInfo::GetImage()
 
-
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetImage( image )
     int image
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetImage( image ) );
-  OUTPUT:
-    RETVAL
-
 
 int
 wxTreeListColumnInfo::GetSelectedImage()
 
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetSelectedImage( image )
     int image
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetSelectedImage( image ) );
-  OUTPUT:
-    RETVAL
-
 
 bool
 wxTreeListColumnInfo::IsEditable()
 
-
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetEditable( edit )
     bool edit
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetEditable( edit ) );
-  OUTPUT:
-    RETVAL     
-
 
 bool
 wxTreeListColumnInfo::IsShown()
 
-wxTreeListColumnInfo*
+void
 wxTreeListColumnInfo::SetShown( shown )
     bool shown
-  CODE:
-    RETVAL = new wxTreeListColumnInfo( THIS->SetEditable( shown ) );
-  OUTPUT:
-    RETVAL
-
 
 MODULE=Wx__TreeListCtrl

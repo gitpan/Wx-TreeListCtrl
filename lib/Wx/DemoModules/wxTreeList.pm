@@ -10,25 +10,6 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package Wx::DemoModules::wxTreeList::Control;
-use strict;
-use Wx::TreeListCtrl;
-use base qw( Wx::TreeListCtrl );
-
-sub new {
-    my $class = shift;
-    my $self = $class->SUPER::new( @_ );
-    return $self;
-}
-
-sub OnCompareItems {
-    my ($self, $item1, $item2) = @_;
-    my $text1 = $self->GetItemText( $item1 );
-    my $text2 = $self->GetItemText( $item2 );
-    Wx::LogMessage("Wx::TreeListCtrl Compare Items; %s : %s", $text1, $text2);
-    return $text1 cmp $text2;
-}
-
 package Wx::DemoModules::wxTreeList;
 
 use strict;
@@ -52,10 +33,19 @@ sub new {
 
 
     # now add the columns
-    $tree->AddColumn( "Column Three",   120, wxLIST_FORMAT_LEFT );
-    $tree->InsertColumn( 0, "Column Two",       120, wxLIST_FORMAT_LEFT );
-    $tree->InsertColumn( 0, "Column One",       120, wxLIST_FORMAT_LEFT );
-
+    if ($Wx::TreeListCtrl::VERSION > 0.06) {
+        my $colinfo = Wx::TreeListColumnInfo->new("Column Three", 120, wxLIST_FORMAT_LEFT);
+        $tree->AddColumn($colinfo);
+        $colinfo->SetText("Column Two");
+        $tree->InsertColumn(0, $colinfo);
+        $colinfo->SetText("Column One");
+        $tree->InsertColumn(0, $colinfo);
+    } else {
+        $tree->AddColumn( "Column Three",   120, wxLIST_FORMAT_LEFT );
+        $tree->InsertColumn( 0, "Column Two",       120, wxLIST_FORMAT_LEFT );
+        $tree->InsertColumn( 0, "Column One",       120, wxLIST_FORMAT_LEFT );
+    }
+    
     my $root = $tree->AddRoot( 'Root Item' );
     my $item1 = $tree->AppendItem( $root, 'First Top Level Tree Item Is Very Long' );
     # $tree->SetItemHeight( $item1, 120 );
@@ -103,4 +93,26 @@ sub new {
 sub add_to_tags { qw(controls) }
 sub title { 'wxTreeList' }
 
+1; package
+  Wx::DemoModules::wxTreeList::Control;
+  
+use strict;
+use Wx::TreeListCtrl;
+use base qw( Wx::TreeListCtrl );
+
+sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new( @_ );
+    return $self;
+}
+
+sub OnCompareItems {
+    my ($self, $item1, $item2) = @_;
+    my $text1 = $self->GetItemText( $item1 );
+    my $text2 = $self->GetItemText( $item2 );
+    Wx::LogMessage("Wx::TreeListCtrl Compare Items; %s : %s", $text1, $text2);
+    return $text1 cmp $text2;
+}
+
 1;
+

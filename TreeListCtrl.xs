@@ -5,7 +5,7 @@
 // Modified by:
 // Created:     08/08/2006
 // RCS-ID:      $Id: TreeListCtrl.xs,v 1.00 2006/08/08 10:31:01 $
-// Copyright:   (c) 2006 Mark Wardell
+// Copyright:   (c) 2006 - 2010 Mark Wardell
 // Licence:     This program is free software; you can redistribute it and/or
 //              modify it under the same terms as Perl itself
 /////////////////////////////////////////////////////////////////////////////

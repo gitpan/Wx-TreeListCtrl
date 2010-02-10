@@ -1,9 +1,20 @@
+#############################################################################
+## Name:        TreeListCtrl.pm
+## Purpose:     Wx::TreeListControl
+## Author:      Mark Wardell
+## Modified by:
+## RCS-ID:      $Id: Wx.pm 2779 2010-02-06 08:49:13Z mbarbon $
+## Copyright:   (c) 2006-2010 Mark Wardell
+## Licence:     This program is free software; you can redistribute it and/or
+##              modify it under the same terms as Perl itself
+#############################################################################
+
 package Wx::TreeListCtrl;
 use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -53,6 +64,8 @@ __END__
 
 Wx::TreeListCtrl - interface to the Wx::TreeListCtrl class
 
+=head1 VERSION 0.07
+
 =head1 SYNOPSIS
 
   use Wx::TreeListCtrl;
@@ -95,7 +108,50 @@ None by default.
 
 =head1 DOCUMENTATION
 
-L<http://wxcode.sourceforge.net/components/treelistctrl/reference.html>, 
+  The main Wx::TreeListCtrl has the same interface as the wxPython module for
+  wxTreeListCtrl which is available here:
+    
+  L<http://wxcode.sourceforge.net/components/treelistctrl/reference.html>
+  
+  Wx::TreeListColumnInfo is also available
+  
+  my $info = Wx::TreeListColumnInfo->new( coltext, width, flags, imageindex, shown, editable);
+  
+     only coltext is required, defaults for other items:
+     width      = 100
+     flags      = wxALIGN_LEFT
+     imageindex = -1
+     shown      = 1 (true)
+     editable   = 0 (false)
+  
+  usage:
+  
+  $treelist->AddColumn($info);
+  $treelist->InsertColumn(2, $info);
+  $treelist->SetColumn(3, $info);
+  
+  # set methods have equivalent get methods
+  my $info = $treelist->GetColumn(4); 
+  $info->SetText('Column Four');
+  $info->SetWidth('50');
+  $info->SetAlignment(wxALIGN_RIGHT);
+  $info->SetImage(1);
+  $info->SetSelectedImage(2);
+  $info->SetShown(1);
+  $info->SetEditable(0);
+  $treelist->SetColumn(4, $info);
+  $info->SetText('Column Five');
+  $treelist->SetColumn(5, $info);
+  
+  # note - changing a TreeListColumnInfo object will not
+  # affect the underlying object. You must 'SetColumn' to
+  # change the underlying data.
+  
+  # the two boolean members use 'Is' as a get method
+  $info->IsShown
+  $info->IsEditable
+  
+
 
 =head1 AUTHOR
 
@@ -103,7 +159,7 @@ Mark Wardell <mwardell@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 by Mark Wardell
+Copyright (C) 2006 - 2010 by Mark Wardell
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,

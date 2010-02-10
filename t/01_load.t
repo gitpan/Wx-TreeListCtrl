@@ -1,13 +1,11 @@
 #!/usr/bin/perl -w
 
-BEGIN { print "1..1\n"; }
-
 use strict;
+use Wx;
+use Test::More 'tests' => 2;
+BEGIN { use_ok('Wx::TreeListCtrl'); }
 use Wx::TreeListCtrl;
 
-print "ok\n";
-
-# Local variables: #
-# mode: cperl #
-# End: #
+my $info = Wx::TreeListColumnInfo->new('Column One');
+is($info->GetText, 'Column One', 'Check Wx::TreeListColumnInfo');
 
