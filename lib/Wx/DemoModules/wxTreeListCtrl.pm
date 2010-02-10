@@ -1,21 +1,24 @@
 #############################################################################
-## Name:        lib/Wx/DemoModules/wxTreeList.pm
+## Name:        lib/Wx/DemoModules/wxTreeListCtrl.pm
 ## Purpose:     wxPerl demo helper for Wx::TreeListCtrl
 ## Author:      Mattia Barbon
-## Modified by:
+## Modified by: Mark Dootson
 ## Created:     13/08/2006
-## RCS-ID:      $Id: wxTreeList.pm,v 1.1 2006/08/17 18:20:57 netcon Exp $
-## Copyright:   (c) 2000, 2003, 2005-2006 Mattia Barbon
+## RCS-ID:      $Id: wxTreeListCtrl.pm 23 2010-02-10 05:17:34Z  $
+## Copyright:   (c) 2005-2010 Mattia Barbon
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package Wx::DemoModules::wxTreeList;
+
+package Wx::DemoModules::wxTreeListCtrl;
 
 use strict;
 use base qw(Wx::Panel Class::Accessor::Fast);
 use Wx::TreeListCtrl;
 use Wx qw( :treelist :listctrl wxDefaultPosition wxDefaultSize wxVERTICAL wxNO_BORDER wxALL wxEXPAND);
+
+our $VERSION = '0.08';
 
 #use Wx::Event qw(EVT_SLIDER);
 
@@ -25,7 +28,7 @@ sub new {
     my( $class, $parent ) = @_;
     my $self = $class->SUPER::new( $parent );
 
-    my $tree = $self->{treelist} = Wx::DemoModules::wxTreeList::Control->new( $self, -1,
+    my $tree = $self->{treelist} = Wx::DemoModules::wxTreeListCtrl::Control->new( $self, -1,
         wxDefaultPosition, [400,200],
         wxTR_HIDE_ROOT | wxTR_ROW_LINES | wxTR_HAS_BUTTONS
         | wxTR_FULL_ROW_HIGHLIGHT | wxTR_SHOW_ROOT_LABEL_ONLY | wxTR_NO_LINES
@@ -91,10 +94,9 @@ sub new {
 }
 
 sub add_to_tags { qw(controls) }
-sub title { 'wxTreeList' }
+sub title { 'wxTreeListCtrl' }
 
-1; package
-  Wx::DemoModules::wxTreeList::Control;
+package Wx::DemoModules::wxTreeListCtrl::Control;
   
 use strict;
 use Wx::TreeListCtrl;

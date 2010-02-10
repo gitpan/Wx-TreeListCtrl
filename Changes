@@ -1,5 +1,8 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.08  Feb  10  2010
+    - namespace fix
+    
 0.07  Feb  10  2010
     - Fixed possible Wx::TreeListColumnInfo thread memory leak
     - Added some tests.   

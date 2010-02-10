@@ -2,8 +2,8 @@
 ## Name:        TreeListCtrl.pm
 ## Purpose:     Wx::TreeListControl
 ## Author:      Mark Wardell
-## Modified by:
-## RCS-ID:      $Id: Wx.pm 2779 2010-02-06 08:49:13Z mbarbon $
+## Modified by: Mark Dootson
+## RCS-ID:      $Id: TreeListCtrl.pm 22 2010-02-10 05:09:05Z  $
 ## Copyright:   (c) 2006-2010 Mark Wardell
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -14,7 +14,7 @@ use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -64,7 +64,7 @@ __END__
 
 Wx::TreeListCtrl - interface to the Wx::TreeListCtrl class
 
-=head1 VERSION 0.07
+=head1 VERSION 0.08
 
 =head1 SYNOPSIS
 
@@ -111,7 +111,7 @@ None by default.
   The main Wx::TreeListCtrl has the same interface as the wxPython module for
   wxTreeListCtrl which is available here:
     
-  L<http://wxcode.sourceforge.net/components/treelistctrl/reference.html>
+L<http://wxcode.sourceforge.net/components/treelistctrl/reference.html>
   
   Wx::TreeListColumnInfo is also available
   
