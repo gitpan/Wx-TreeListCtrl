@@ -3,18 +3,19 @@
 ## Purpose:     Wx::TreeListControl
 ## Author:      Mark Wardell
 ## Modified by: Mark Dootson
-## RCS-ID:      $Id: TreeListCtrl.pm 22 2010-02-10 05:09:05Z  $
+## RCS-ID:      $Id: TreeListCtrl.pm 6 2010-03-16 09:31:18Z mark.dootson $
 ## Copyright:   (c) 2006-2010 Mark Wardell
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
 package Wx::TreeListCtrl;
+use 5.006;
 use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -64,7 +65,7 @@ __END__
 
 Wx::TreeListCtrl - interface to the Wx::TreeListCtrl class
 
-=head1 VERSION 0.08
+=head1 VERSION 0.09
 
 =head1 SYNOPSIS
 

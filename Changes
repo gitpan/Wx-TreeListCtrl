@@ -1,5 +1,9 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.09  Mar  16  2010
+    - Makefile and use fixes
+    - version released for PPM repo update.
+
 0.08  Feb  10  2010
     - namespace fix
     
@@ -8,8 +12,6 @@ Revision history for Perl extension Wx::TreeListCtrl.
     - Added some tests.   
 
 0.06  Feb   2  2010
-      A patched non official version.
-      get the official version from search.cpan.org
     - Updated to use latest source from wxTreeListCtrl
       in wxPython dist but added wxTR_SHOW_ROOT_LABEL_ONLY
       back in.

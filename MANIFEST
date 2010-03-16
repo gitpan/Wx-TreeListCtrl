@@ -16,3 +16,4 @@ t/03_threads.t
 t/Tests_Helper.pm
 XS/TreeListCtrl.xs
 XS/TreeListColumnInfo.xs
+META.yml                                 Module meta-data (added by MakeMaker)

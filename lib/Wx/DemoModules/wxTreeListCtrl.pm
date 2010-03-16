@@ -4,7 +4,7 @@
 ## Author:      Mattia Barbon
 ## Modified by: Mark Dootson
 ## Created:     13/08/2006
-## RCS-ID:      $Id: wxTreeListCtrl.pm 23 2010-02-10 05:17:34Z  $
+## RCS-ID:      $Id: wxTreeListCtrl.pm 6 2010-03-16 09:31:18Z mark.dootson $
 ## Copyright:   (c) 2005-2010 Mattia Barbon
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -18,7 +18,7 @@ use base qw(Wx::Panel Class::Accessor::Fast);
 use Wx::TreeListCtrl;
 use Wx qw( :treelist :listctrl wxDefaultPosition wxDefaultSize wxVERTICAL wxNO_BORDER wxALL wxEXPAND);
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 #use Wx::Event qw(EVT_SLIDER);
 
