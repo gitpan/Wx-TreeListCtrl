@@ -4,7 +4,7 @@
 ## Author:      Mattia Barbon
 ## Modified by: Mark Dootson
 ## Created:     13/08/2006
-## RCS-ID:      $Id: wxTreeListCtrl.pm 6 2010-03-16 09:31:18Z mark.dootson $
+## RCS-ID:      $Id: wxTreeListCtrl.pm 11 2010-03-25 18:51:39Z mark.dootson $
 ## Copyright:   (c) 2005-2010 Mattia Barbon
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -18,7 +18,7 @@ use base qw(Wx::Panel Class::Accessor::Fast);
 use Wx::TreeListCtrl;
 use Wx qw( :treelist :listctrl wxDefaultPosition wxDefaultSize wxVERTICAL wxNO_BORDER wxALL wxEXPAND);
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 #use Wx::Event qw(EVT_SLIDER);
 
@@ -55,9 +55,9 @@ sub new {
     $tree->SetItemBold( $item1, 1 );
     $tree->SetItemTextColour( $item1, Wx::Colour->new( 22, 14, 135 ));
     $tree->SetItemBackgroundColour( $item1, Wx::Colour->new( 160, 184, 255 ));
-    my $child1 = $tree->AppendItem( $item1, 'Child #1' );
-    my $child2 = $tree->AppendItem( $item1, 'Child #2' );
-    my $child3 = $tree->AppendItem( $item1, 'Child #3' );
+    my $child1 = $tree->AppendItem( $item1, 'Editable Child #1' );
+    my $child2 = $tree->AppendItem( $item1, 'Editable Child #2' );
+    my $child3 = $tree->AppendItem( $item1, 'Editable Child #3' );
         
         # call Column method directly
     $tree->SetItemColumnText( $child1, 1, "Child #1 - Column 2" );
@@ -72,18 +72,21 @@ sub new {
     $tree->SetItemBold( $item2, 1 );
     $tree->SetItemTextColour( $item2, Wx::Colour->new( 178, 12, 48 ));
     $tree->SetItemBackgroundColour( $item2, Wx::Colour->new( 255, 211, 135 ));
-    my $childA = $tree->AppendItem( $item2, 'Child A' );
-    my $childB = $tree->AppendItem( $item2, 'Child B' );
-    my $childC = $tree->AppendItem( $item2, 'Child C' );
+    my $childA = $tree->AppendItem( $item2, 'Editable Child A' );
+    my $childB = $tree->AppendItem( $item2, 'Editable Child B' );
+    my $childC = $tree->AppendItem( $item2, 'Editable Child C' );
     $tree->SetItemText( $childA, 1, "Child A - Column 2" );
     $tree->SetItemText( $childA, 2, "Child A - Column 3" );
     $tree->SetItemText( $childB, 1, "Child B - Column 2" );
     $tree->SetItemText( $childB, 2, "Child B - Column 3" );
     $tree->SetItemText( $childC, 1, "Child C - Column 2" );
     $tree->SetItemText( $childC, 2, "Child C - Column 3" );
-        $tree->ExpandAll( $tree->GetRootItem );
-        $tree->SortChildren($item1);
-        $tree->SortChildren($item2);
+    
+    $tree->ExpandAll( $tree->GetRootItem );
+    $tree->SortChildren($item1);
+    $tree->SortChildren($item2);
+
+    $tree->SetColumnEditable(0,1);
         
     my $sizer = Wx::BoxSizer->new(wxVERTICAL);
     $sizer->Add($tree,1,wxALL|wxEXPAND, 5);

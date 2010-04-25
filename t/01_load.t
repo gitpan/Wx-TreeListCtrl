@@ -9,3 +9,5 @@ use Wx::TreeListCtrl;
 my $info = Wx::TreeListColumnInfo->new('Column One');
 is($info->GetText, 'Column One', 'Check Wx::TreeListColumnInfo');
 
+
+

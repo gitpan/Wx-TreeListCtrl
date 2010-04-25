@@ -1,3 +1,4 @@
+# -*- mode: perl; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 use 5.006;
 use strict;
 use Wx::build::MakeMaker;
@@ -12,6 +13,9 @@ wxWriteMakefile(
     WX_OVERLOAD     => {header  => 'cpp/ovl_const.h',
                         source  => 'cpp/ovl_const.cpp',},
     PREREQ_PM       => { Wx   => '0.57', },
+    CONFIGURE_REQUIRES => {
+                         'Wx::build::MakeMaker' => 0,
+    },
     ## LIBS         => [''], # e.g., '-lm'
     ## INC          => '-I.', # e.g., '-I. -I/usr/include/other'
     ## OBJECT       => '$(O_FILES)', # link all the C files too

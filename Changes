@@ -1,5 +1,11 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.10  Apr  23  2010
+
+    - Wx::build::MakeMaker added to configure_requires (Alexandr Ciornii)
+    - Editable column in example (Alexandr Ciornii)
+    - Demo module improvements (Alexandr Ciornii)
+
 0.09  Mar  16  2010
     - Makefile and use fixes
     - version released for PPM repo update.
@@ -23,7 +29,7 @@ Revision history for Perl extension Wx::TreeListCtrl.
 
 0.05  Mon Aug  21 2006
     - changed build system in accordance with Wx 0.57
-	- removed script/pipe.pl
+    - removed script/pipe.pl
 
 0.04  Fri Aug  18 2006
     - added lib/Wx/DemoModules/wxTreeList.pm
@@ -35,5 +41,5 @@ Revision history for Perl extension Wx::TreeListCtrl.
     - fixed exporting of constants
 
 0.01  Tue Aug  8 10:28:54 2006
-	- first attempt at wrapping wxTreeListCtrl
+    - first attempt at wrapping wxTreeListCtrl
 
