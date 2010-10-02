@@ -1,5 +1,9 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.11  Oct   2  2010
+    - Makefile.PL no longer depends on wxperl_overload
+    - Better module metadata (Alexandr Ciornii)
+
 0.10  Apr  23  2010
 
     - Wx::build::MakeMaker added to configure_requires (Alexandr Ciornii)

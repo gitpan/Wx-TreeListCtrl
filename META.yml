@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Wx-TreeListCtrl
-version:            0.10
+version:            0.11
 abstract:           interface to the Wx::TreeListCtrl class
 author:
     - Mark Wardell <mwardell@cpan.org>
@@ -12,6 +12,13 @@ build_requires:
     ExtUtils::MakeMaker:  0
 requires:
     Wx:  0.57
+resources:
+    keywords:
+        - tree
+        - data control
+        - GUI
+        - wx
+    repository:  https://wxperltreelistctrl.googlecode.com/svn/trunk
 no_index:
     directory:
         - t

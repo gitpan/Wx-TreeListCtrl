@@ -3,7 +3,7 @@
 ## Purpose:     Wx::TreeListControl
 ## Author:      Mark Wardell
 ## Modified by: Mark Dootson
-## RCS-ID:      $Id: TreeListCtrl.pm 11 2010-03-25 18:51:39Z mark.dootson $
+## RCS-ID:      $Id: TreeListCtrl.pm 15 2010-05-18 23:23:54Z mark.dootson $
 ## Copyright:   (c) 2006-2010 Mark Wardell
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -15,7 +15,7 @@ use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -65,7 +65,7 @@ __END__
 
 Wx::TreeListCtrl - interface to the Wx::TreeListCtrl class
 
-=head1 VERSION 0.10
+=head1 VERSION 0.11
 
 =head1 SYNOPSIS
 
@@ -154,7 +154,12 @@ None by default.
   $info->IsShown
   $info->IsEditable
 
-
+  The control processes some mouse events internally. To respond to 'right click' and
+  context events, use
+  EVT_TREE_ITEM_RIGHT_CLICK  - The user has clicked an item with the right mouse button
+  EVT_RIGHT_UP - The user has right clicked the control with the right mouse button - but
+  not on any item
+  EVT_CONTEXT_MENU - The user has used keyboard method to invoke a context menu
 
 =head1 AUTHOR
 
