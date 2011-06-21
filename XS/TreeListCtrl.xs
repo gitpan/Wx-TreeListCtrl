@@ -4,8 +4,8 @@
 # Author:      Mark Wardell
 # Modified by:
 # Created:     08/08/2006
-# RCS-ID:      $Id: TreeListCtrl.xs 3 2010-02-17 06:08:51Z mark.dootson $
-# Copyright:   (c) 2006 - 2010 Mark Wardell
+# RCS-ID:      $Id: TreeListCtrl.xs 17 2011-06-21 14:21:11Z mark.dootson $
+# Copyright:   (c) 2006 - 2011 Mark Wardell
 # Licence:     This program is free software; you can redistribute it and/or
 #              modify it under the same terms as Perl itself
 ##################################################################################
@@ -13,6 +13,11 @@
 #include <cpp/helpers.h>   // again - for wxPliTreeItemData
 
 MODULE = Wx__TreeListCtrl   PACKAGE = Wx::TreeListCtrl
+
+## DECLARE_OVERLOAD( wtda, Wx::TreeItemData )
+## DECLARE_OVERLOAD( wtlc, Wx::TreeListColumnInfo )
+## DECLARE_OVERLOAD( wtid, Wx::TreeItemId )
+## DECLARE_OVERLOAD( wtip, Wx::ToolTip )
 
 void
 new( ... )
@@ -148,8 +153,6 @@ wxTreeListCtrl::AssignButtonsImageList( imagelist )
 ##
 ## Functions to work with columns
 ##
-
-## DECLARE_OVERLOAD( wtlc, Wx::TreeListColumnInfo )
 
 void
 wxTreeListCtrl::AddColumn( ... )
@@ -289,8 +292,6 @@ wxTreeListCtrl::IsColumnEditable( col )
     int col
 
 
-## DECLARE_OVERLOAD( wtid, Wx::TreeItemId )
-
 void
 wxTreeListCtrl::GetItemText( ... )
     PPCODE:
@@ -339,17 +340,35 @@ wxTreeListCtrl::GetItemColumnImage( item, col, which )
     int col
     wxTreeItemIcon which
   CODE:
-    RETVAL = THIS->GetItemImage( *item, col, which);
+    RETVAL = THIS->GetItemImage( *item, col );
   OUTPUT:
     RETVAL
 
+void
+wxTreeListCtrl::GetItemData( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, GetItemDataMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, GetItemDataColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::GetItemData )
+
 wxTreeItemData*
-wxTreeListCtrl::GetItemData( item )
+wxTreeListCtrl::GetItemDataMain( item )
     wxTreeItemId* item
   CODE:
     RETVAL = THIS->GetItemData( *item );
   OUTPUT:
     RETVAL
+    
+wxTreeItemData*
+wxTreeListCtrl::GetItemDataColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = THIS->GetItemData( *item, col );
+  OUTPUT:
+    RETVAL    
+
 
 SV_null*
 wxTreeListCtrl::GetPlData( item )
@@ -360,34 +379,107 @@ wxTreeListCtrl::GetPlData( item )
   OUTPUT:
     RETVAL
 
+void
+wxTreeListCtrl::GetItemBold( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, GetItemBoldMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, GetItemBoldColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::GetItemBold )
+
 bool
-wxTreeListCtrl::GetItemBold ( item )
+wxTreeListCtrl::GetItemBoldMain( item )
     wxTreeItemId* item
-  C_ARGS: *item
+  CODE:
+    RETVAL = THIS->GetItemBold( *item );
+  OUTPUT:
+    RETVAL
+    
+bool
+wxTreeListCtrl::GetItemBoldColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = THIS->GetItemBold( *item, col );
+  OUTPUT:
+    RETVAL    
+
+
+void
+wxTreeListCtrl::GetItemTextColour( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, GetItemTextColourMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, GetItemTextColourColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::GetItemTextColour )
 
 wxColour*
-wxTreeListCtrl::GetItemTextColour( item )
+wxTreeListCtrl::GetItemTextColourMain( item )
     wxTreeItemId* item
   CODE:
     RETVAL = new wxColour( THIS->GetItemTextColour( *item ) );
   OUTPUT:
     RETVAL
+    
+wxColour*
+wxTreeListCtrl::GetItemTextColourColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = new wxColour( THIS->GetItemTextColour( *item, col ) );
+  OUTPUT:
+    RETVAL    
+
+
+void
+wxTreeListCtrl::GetItemBackgroundColour( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, GetItemBackgroundColourMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, GetItemBackgroundColourColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::GetItemBackgroundColour )
 
 wxColour*
-wxTreeListCtrl::GetItemBackgroundColour( item )
-	wxTreeItemId* item
+wxTreeListCtrl::GetItemBackgroundColourMain( item )
+    wxTreeItemId* item
   CODE:
     RETVAL = new wxColour( THIS->GetItemBackgroundColour( *item ) );
   OUTPUT:
     RETVAL
+    
+wxColour*
+wxTreeListCtrl::GetItemBackgroundColourColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = new wxColour( THIS->GetItemBackgroundColour( *item, col ) );
+  OUTPUT:
+    RETVAL    
+
+void
+wxTreeListCtrl::GetItemFont( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, GetItemFontMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, GetItemFontColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::GetItemFont )
 
 wxFont*
-wxTreeListCtrl::GetItemFont( item )
-	wxTreeItemId* item
+wxTreeListCtrl::GetItemFontMain( item )
+    wxTreeItemId* item
   CODE:
     RETVAL = new wxFont( THIS->GetItemFont( *item ) );
   OUTPUT:
     RETVAL
+    
+wxFont*
+wxTreeListCtrl::GetItemFontColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = new wxFont( THIS->GetItemFont( *item, col ) );
+  OUTPUT:
+    RETVAL    
 
 ##
 ## Modifiers
@@ -407,7 +499,8 @@ wxTreeListCtrl::SetItemTextMain( item, text )
 	wxString text
   CODE:
     THIS->SetItemText( *item, text );
-    
+
+
 void
 wxTreeListCtrl::SetItemColumnText( item, col, text )
 	wxTreeItemId* item
@@ -416,34 +509,27 @@ wxTreeListCtrl::SetItemColumnText( item, col, text )
   CODE:
     THIS->SetItemText( *item, col, text );
 
-void
-wxTreeListCtrl::SetItemImage( ... )
-    PPCODE:
-    BEGIN_OVERLOAD()
-        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_wtid_n_n, SetItemImageMain, 2 )
-        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_n_n, SetItemColumnImage, 4 )
-    END_OVERLOAD( Wx::TreeListCtrl::SetItemImage )
-    
-void
-wxTreeListCtrl::SetItemImageMain( item, image, which = wxTreeItemIcon_Normal )
-    wxTreeItemId* item
-    int image
-    wxTreeItemIcon which
-  CODE:
-    THIS->SetItemImage( *item, image, which );
   
 void
-wxTreeListCtrl::SetItemColumnImage( item, col, image, which )
+wxTreeListCtrl::SetItemImage( item, col, image )
     wxTreeItemId* item
     int col
     int image
-    wxTreeItemIcon which
   CODE:
-    THIS->SetItemImage( *item, col, image, which );
+    THIS->SetItemImage( *item, col, image );
 
 
 void
-wxTreeListCtrl::SetItemData( item, data )
+wxTreeListCtrl::SetItemData( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_wtda, SetItemDataMain, 2 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_wtda, SetItemDataColumn, 3 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetItemData )
+
+
+void
+wxTreeListCtrl::SetItemDataMain( item, data )
     wxTreeItemId* item
     wxTreeItemData* data
   CODE:
@@ -452,34 +538,116 @@ wxTreeListCtrl::SetItemData( item, data )
     THIS->SetItemData( *item, data );
 
 void
+wxTreeListCtrl::SetItemDataColumn( item, col, data )
+    wxTreeItemId* item
+    int col
+    wxTreeItemData* data
+  CODE:
+    wxTreeItemData* tid = THIS->GetItemData( *item );
+    if( tid ) delete tid;
+    THIS->SetItemData( *item, col, data );
+
+void
 wxTreeListCtrl::SetItemHasChildren( item, hasChildren = true )
     wxTreeItemId* item
     bool hasChildren
   C_ARGS: *item, hasChildren
 
+
 void
-wxTreeListCtrl::SetItemBold( item, bold = true )
+wxTreeListCtrl::SetItemBold( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_n, SetItemBoldColumn, 3 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, SetItemBoldMain, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetItemBold )
+
+
+void
+wxTreeListCtrl::SetItemBoldMain( item, bold )
     wxTreeItemId* item
     bool bold
-  C_ARGS: *item, bold
-
+  CODE:
+    THIS->SetItemBold( *item, bold );
+  
 void
-wxTreeListCtrl::SetItemTextColour( item, col )
+wxTreeListCtrl::SetItemBoldColumn( item, col, bold )
     wxTreeItemId* item
-    wxColour col
-  C_ARGS: *item, col
+    int col
+    bool bold
+  CODE:
+    THIS->SetItemBold( *item, col, bold );
+  
+  
+void
+wxTreeListCtrl::SetItemTextColour( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_wcol, SetItemTextColourMain, 2 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_wcol, SetItemTextColourColumn, 3 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetItemTextColour )
 
 void
-wxTreeListCtrl::SetItemBackgroundColour( item, col )
+wxTreeListCtrl::SetItemTextColourMain( item, colour )
     wxTreeItemId* item
-    wxColour col
-  C_ARGS: *item, col
+    wxColour* colour
+  CODE:
+    THIS->SetItemTextColour(*item, *colour);
+  
+void
+wxTreeListCtrl::SetItemTextColourColumn( item, col, colour )
+    wxTreeItemId* item
+    int col
+    wxColour* colour
+  CODE:
+    THIS->SetItemTextColour(*item, col, *colour);
+  
+void
+wxTreeListCtrl::SetItemBackgroundColour( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_wcol, SetItemBackgroundColourMain, 2 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_wcol, SetItemBackgroundColourColumn, 3 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetItemBackgroundColour )
 
 void
-wxTreeListCtrl::SetItemFont( item, font )
+wxTreeListCtrl::SetItemBackgroundColourMain( item, colour )
+    wxTreeItemId* item
+    wxColour* colour
+  CODE:
+    THIS->SetItemBackgroundColour(*item, *colour);
+  
+void
+wxTreeListCtrl::SetItemBackgroundColourColumn( item, col, colour )
+    wxTreeItemId* item
+    int col
+    wxColour* colour
+  CODE:
+    THIS->SetItemBackgroundColour(*item, col, *colour);
+
+
+void
+wxTreeListCtrl::SetItemFont( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_wfon, SetItemFontMain, 2 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n_wfon, SetItemFontColumn, 3 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetItemFont )
+
+void
+wxTreeListCtrl::SetItemFontMain( item, font )
     wxTreeItemId* item
     wxFont* font
-  C_ARGS: *item, *font
+  CODE:
+    THIS->SetItemFont(*item, *font);
+  
+void
+wxTreeListCtrl::SetItemFontColumn( item, col, font )
+    wxTreeItemId* item
+    int col
+    wxFont* font
+  CODE:
+    THIS->SetItemFont(*item, col, *font);
 
 void
 wxTreeListCtrl::SetFont( font )
@@ -502,10 +670,11 @@ wxTreeListCtrl::GetWindowStyleFlag()
 ##
 
 bool
-wxTreeListCtrl::IsVisible (item, fullRow = false)
+wxTreeListCtrl::IsVisible (item, fullRow = false, within = true)
 	wxTreeItemId* item
 	bool fullRow
-  C_ARGS: *item, fullRow
+        bool within
+  C_ARGS: *item, fullRow, within
 
 bool
 wxTreeListCtrl::HasChildren ( item )
@@ -522,10 +691,30 @@ wxTreeListCtrl::IsSelected ( item )
 	wxTreeItemId* item
   C_ARGS: *item
 
+void
+wxTreeListCtrl::IsBold( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, IsBoldMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, IsBoldColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::IsBold )
+
 bool
-wxTreeListCtrl::IsBold ( item )
-	wxTreeItemId* item
-  C_ARGS: *item
+wxTreeListCtrl::IsBoldMain( item )
+    wxTreeItemId* item
+  CODE:
+    RETVAL = THIS->IsBold( *item );
+  OUTPUT:
+    RETVAL
+    
+bool
+wxTreeListCtrl::IsBoldColumn( item, col )
+    wxTreeItemId* item
+    int col
+  CODE:
+    RETVAL = THIS->IsBold( *item, col );
+  OUTPUT:
+    RETVAL
 
 size_t
 wxTreeListCtrl::GetChildrenCount ( item, recursively = true );
@@ -574,12 +763,12 @@ wxTreeListCtrl::GetItemParent ( item )
   OUTPUT:
     RETVAL
     
-wxTreeItemId*
-wxTreeListCtrl::GetCurrentItem ()
-  CODE:
-    RETVAL = new wxTreeItemId( THIS->GetCurrentItem() );
-  OUTPUT:
-    RETVAL
+#wxTreeItemId*
+#wxTreeListCtrl::GetCurrentItem ()
+#  CODE:
+#    RETVAL = new wxTreeItemId( THIS->GetCurrentItem() );
+#  OUTPUT:
+#    RETVAL
     
 void
 wxTreeListCtrl::SetCurrentItem ( item )
@@ -699,29 +888,51 @@ wxTreeListCtrl::GetPrevExpanded ( item )
 
 # get visible items
 wxTreeItemId*
-wxTreeListCtrl::GetFirstVisibleItem()
+wxTreeListCtrl::GetFirstVisibleItem( fullRow = false )
+    bool fullRow
   CODE:
-    RETVAL = new wxTreeItemId( THIS->GetFirstVisibleItem() );
+    RETVAL = new wxTreeItemId( THIS->GetFirstVisibleItem( fullRow ) );
+  OUTPUT:
+    RETVAL
+    
+wxTreeItemId*
+wxTreeListCtrl::GetFirstVisible(fullRow = false, within = true)
+    bool fullRow
+    bool within
+  CODE:
+    RETVAL = new wxTreeItemId( THIS->GetFirstVisible( fullRow, within ) );
   OUTPUT:
     RETVAL
 
 wxTreeItemId*
-wxTreeListCtrl::GetNextVisible ( item, fullrow = false )
-	wxTreeItemId* item
-	bool fullrow
+wxTreeListCtrl::GetNextVisible ( item, fullrow = false, within = true )
+    wxTreeItemId* item
+    bool fullrow
+    bool within
   CODE:
-    RETVAL = new wxTreeItemId( THIS->GetNextVisible( *item, fullrow ) );
+    RETVAL = new wxTreeItemId( THIS->GetNextVisible( *item, fullrow, within ) );
   OUTPUT:
     RETVAL
 
 wxTreeItemId*
-wxTreeListCtrl::GetPrevVisible ( item, fullrow = false )
-	wxTreeItemId* item
-	bool fullrow
+wxTreeListCtrl::GetPrevVisible ( item, fullrow = false, within = true )
+    wxTreeItemId* item
+    bool fullrow
+    bool within
   CODE:
-    RETVAL = new wxTreeItemId( THIS->GetPrevVisible( *item, fullrow ) );
+    RETVAL = new wxTreeItemId( THIS->GetPrevVisible( *item, fullrow, within ) );
   OUTPUT:
     RETVAL
+
+wxTreeItemId*
+wxTreeListCtrl::GetLastVisible(fullRow = false, within = true)
+    bool fullRow
+    bool within
+  CODE:
+    RETVAL = new wxTreeItemId( THIS->GetLastVisible( fullRow, within ) );
+  OUTPUT:
+    RETVAL
+
 
 ##
 ## Operations
@@ -761,8 +972,6 @@ wxTreeListCtrl::AppendItem( parent, text, image = -1, selImage = -1, data = 0 )
   OUTPUT:
 	RETVAL
         
-## DECLARE_OVERLOAD( wtda, Wx::TreeItemData )
-
 void
 wxTreeListCtrl::InsertItem( ... )
     PPCODE:
@@ -910,36 +1119,75 @@ wxTreeCtrl::GetBoundingRect( item, textOnly = false )
         XSRETURN_UNDEF;
     }
 
+void
+wxTreeListCtrl::EditLabel( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, EditLabelMain, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_wtid_n, EditLabelColumn, 2 )
+    END_OVERLOAD( Wx::TreeListCtrl::EditLabel )
 
 void
-wxTreeListCtrl::EditLabel(item, column)
+wxTreeListCtrl::EditLabelMain( item )
+    wxTreeItemId* item
+  CODE:
+    THIS->EditLabel(*item );
+
+void
+wxTreeListCtrl::EditLabelColumn(item, column)
     wxTreeItemId* item
     int column
-  C_ARGS: *item, column
-  
+  CODE:
+    THIS->EditLabel(*item, column );
   
 void
-wxTreeListCtrl::EditLabelMain(item)
-    wxTreeItemId* item
-  CODE:
-    THIS->EditLabel( *item );
+wxTreeListCtrl::EndEdit( isCancelled );
+    bool isCancelled
  
-int
-wxTreeListCtrl::OnCompareItems( item1, item2 )
-    wxTreeItemId* item1
-    wxTreeItemId* item2
-  CODE:
-    RETVAL = THIS->OnCompareItems( *item1, *item2 );
-  OUTPUT:
-    RETVAL
+#////int
+#////wxTreeListCtrl::OnCompareItems( item1, item2 )
+#////    wxTreeItemId* item1
+#////    wxTreeItemId* item2
+#////  CODE:
+#////    RETVAL = THIS->OnCompareItems( *item1, *item2 );
+#////  OUTPUT:
+#////    RETVAL
+  
+
   
 void
-wxTreeListCtrl::SortChildren( item )
+wxTreeListCtrl::SortChildren( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtid, SortChildrenMain, 1 )
+        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_wtid_n_n, SortChildrenColumn, 2  )
+    END_OVERLOAD( Wx::TreeListCtrl::SortChildren )
+
+void
+wxTreeListCtrl::SortChildrenMain( item )
     wxTreeItemId* item
-  C_ARGS: *item
-  
+  CODE:
+    THIS->SortChildren( *item );
+    
+void
+wxTreeListCtrl::SortChildrenColumn( item, col, reverseOrder = false )
+    wxTreeItemId* item
+    int col
+    bool reverseOrder
+  CODE:
+    THIS->SortChildren( *item, col, reverseOrder );
+
+void
+wxTreeListCtrl::FindItem( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_wtid_s_n, FindItemMain, 2 )
+        MATCH_REDISP_COUNT_ALLOWMORE( wxPliOvl_wtid_n_s_n, FindItemColumn, 3  )
+    END_OVERLOAD( Wx::TreeListCtrl::FindItem )
+
+
 wxTreeItemId*
-wxTreeListCtrl::FindItem ( item, str, mode )
+wxTreeListCtrl::FindItemMain ( item, str, mode = 0 )
     wxTreeItemId* item
     wxString str
     int mode
@@ -947,6 +1195,17 @@ wxTreeListCtrl::FindItem ( item, str, mode )
     RETVAL = new wxTreeItemId( THIS->FindItem( *item, str, mode ) );
   OUTPUT:
     RETVAL
+    
+wxTreeItemId*
+wxTreeListCtrl::FindItemColumn ( item, col, str, mode = 0 )
+    wxTreeItemId* item
+    int col
+    wxString str
+    int mode
+  CODE:
+    RETVAL = new wxTreeItemId( THIS->FindItem( *item, col, str, mode ) );
+  OUTPUT:
+    RETVAL    
     
 bool
 wxTreeListCtrl::SetBackgroundColour( colour )
@@ -963,11 +1222,11 @@ wxTreeListCtrl::SetDragItem (item = (wxTreeItemId*)NULL)
     wxTreeItemId* item
   C_ARGS: *item
 
-wxTreeListHeaderWindow*
-wxTreeListCtrl::GetHeaderWindow()
+#wxTreeListHeaderWindow*
+#wxTreeListCtrl::GetHeaderWindow()
 
-wxTreeListMainWindow*
-wxTreeListCtrl::GetMainWindow()
+#wxTreeListMainWindow*
+#wxTreeListCtrl::GetMainWindow()
     
 wxSize*
 wxTreeListCtrl::DoGetBestSize()  
@@ -975,6 +1234,32 @@ wxTreeListCtrl::DoGetBestSize()
     RETVAL = new wxSize( THIS->DoGetBestSize() );
   OUTPUT:
     RETVAL
+
+void
+wxTreeListCtrl::SetToolTip( ... )
+    PPCODE:
+    BEGIN_OVERLOAD()
+        MATCH_REDISP_COUNT( wxPliOvl_wtip, SetToolTipToolTip, 1 )
+        MATCH_REDISP_COUNT( wxPliOvl_s, SetToolTipString, 1 )
+    END_OVERLOAD( Wx::TreeListCtrl::SetToolTip )
+    
+
+void
+wxTreeListCtrl::SetToolTipToolTip( tip )
+    wxToolTip* tip
+  CODE:
+    THIS->SetToolTip( tip );
+
+void
+wxTreeListCtrl::SetToolTipString( tip )
+    wxString tip
+  CODE:
+    THIS->SetToolTip( tip );
+    
+void
+wxTreeListCtrl::SetItemToolTip( item, tip)
+    wxTreeItemId* item
+    wxString tip
 
 
 MODULE=Wx__TreeListCtrl

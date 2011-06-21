@@ -3,19 +3,19 @@
 ## Purpose:     Wx::TreeListControl
 ## Author:      Mark Wardell
 ## Modified by: Mark Dootson
-## RCS-ID:      $Id: TreeListCtrl.pm 15 2010-05-18 23:23:54Z mark.dootson $
+## RCS-ID:      $Id: TreeListCtrl.pm 17 2011-06-21 14:21:11Z mark.dootson $
 ## Copyright:   (c) 2006-2010 Mark Wardell
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
 package Wx::TreeListCtrl;
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -47,8 +47,8 @@ our @constants = qw(
 
 push @Wx::EXPORT_OK, @constants;
 $Wx::EXPORT_TAGS{'treelist'} = [ @constants ];
-
-Wx::wx_boot( 'Wx::TreeListCtrl', $VERSION );
+require XSLoader;
+XSLoader::load( 'Wx::TreeListCtrl', $VERSION );
 
 #
 # confirm inheritance tree
@@ -57,6 +57,9 @@ Wx::wx_boot( 'Wx::TreeListCtrl', $VERSION );
 no strict;
 
 package Wx::TreeListCtrl;  @ISA = qw( Wx::Control );
+
+# Alias
+*Wx::TreeListCtrl::Edit = \&Wx::TreeListCtrl::EditLabel;
 
 1;
 __END__
@@ -171,7 +174,7 @@ Mark Dootson <mdootson@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2006 - 2010 by Mark Wardell
+Copyright (C) 2006 - 2011 by Mark Wardell
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,

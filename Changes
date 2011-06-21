@@ -1,5 +1,11 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.12  Jun  21  2011
+    - Used lastest base wxTreeListCtrl code from http://wxcode.sourceforge.net
+      several methods updated to take 'coulmn' param.
+      Interface should now closely match that described at
+      http://wxcode.sourceforge.net/components/treelistctrl/reference.html
+
 0.11  Oct   2  2010
     - Makefile.PL no longer depends on wxperl_overload
     - Better module metadata (Alexandr Ciornii)

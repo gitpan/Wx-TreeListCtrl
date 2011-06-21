@@ -4,7 +4,7 @@
 ## Author:      Mattia Barbon
 ## Modified by: Mark Dootson
 ## Created:     13/08/2006
-## RCS-ID:      $Id: wxTreeListCtrl.pm 11 2010-03-25 18:51:39Z mark.dootson $
+## RCS-ID:      $Id: wxTreeListCtrl.pm 17 2011-06-21 14:21:11Z mark.dootson $
 ## Copyright:   (c) 2005-2010 Mattia Barbon
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -18,7 +18,7 @@ use base qw(Wx::Panel Class::Accessor::Fast);
 use Wx::TreeListCtrl;
 use Wx qw( :treelist :listctrl wxDefaultPosition wxDefaultSize wxVERTICAL wxNO_BORDER wxALL wxEXPAND);
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 #use Wx::Event qw(EVT_SLIDER);
 
@@ -66,8 +66,9 @@ sub new {
         # call overloaded method - same result as above
     $tree->SetItemText( $child2, 2, "Child #2 - Column 3" );
     $tree->SetItemText( $child3, 1, "Child #3 - Column 2" );
+    $tree->SetItemTextColour( $child3, 0, Wx::Colour->new(255,0,0));
     $tree->SetItemText( $child3, 2, "Child #3 - Column 3" );
-
+    
     my $item2 = $tree->AppendItem( $root, 'Second Tree Item Is Also Long' );
     $tree->SetItemBold( $item2, 1 );
     $tree->SetItemTextColour( $item2, Wx::Colour->new( 178, 12, 48 ));
@@ -85,6 +86,9 @@ sub new {
     $tree->ExpandAll( $tree->GetRootItem );
     $tree->SortChildren($item1);
     $tree->SortChildren($item2);
+    
+    # set colour of list item
+    
 
     $tree->SetColumnEditable(0,1);
         

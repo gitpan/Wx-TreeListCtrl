@@ -83,8 +83,8 @@ sub run_load_tests {
     ok(!$retcol->IsShown, 'returned colinfo shown');
     ok($retcol->IsEditable, 'returned colinfo editable');
     is($retcol->GetSelectedImage, 3, 'returned colinfo editable');
+    
 }
-
 
 
 in_frame(\&run_load_tests);

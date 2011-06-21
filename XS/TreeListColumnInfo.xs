@@ -4,8 +4,8 @@
 # Author:      Mark Wardell
 # Modified by:
 # Created:     08/08/2006
-# RCS-ID:      $Id: TreeListColumnInfo.xs 3 2010-02-17 06:08:51Z mark.dootson $
-# Copyright:   (c) 2006 - 2010 Mark Wardell
+# RCS-ID:      $Id: TreeListColumnInfo.xs 17 2011-06-21 14:21:11Z mark.dootson $
+# Copyright:   (c) 2006 - 2011 Mark Wardell
 # Licence:     This program is free software; you can redistribute it and/or
 #              modify it under the same terms as Perl itself
 ##################################################################################
