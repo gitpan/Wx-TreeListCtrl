@@ -18,9 +18,8 @@ use base qw(Wx::Panel Class::Accessor::Fast);
 use Wx::TreeListCtrl;
 use Wx qw( :treelist :listctrl wxDefaultPosition wxDefaultSize wxVERTICAL wxNO_BORDER wxALL wxEXPAND);
 
-our $VERSION = '0.11';
+our $VERSION = '0.13';
 
-#use Wx::Event qw(EVT_SLIDER);
 
 __PACKAGE__->mk_ro_accessors( qw(treelist) );
 
@@ -66,8 +65,9 @@ sub new {
         # call overloaded method - same result as above
     $tree->SetItemText( $child2, 2, "Child #2 - Column 3" );
     $tree->SetItemText( $child3, 1, "Child #3 - Column 2" );
-    $tree->SetItemTextColour( $child3, 0, Wx::Colour->new(255,0,0));
     $tree->SetItemText( $child3, 2, "Child #3 - Column 3" );
+    
+    $tree->SetItemTextColour( $child3, 2, Wx::Colour->new(255,0,0));
     
     my $item2 = $tree->AppendItem( $root, 'Second Tree Item Is Also Long' );
     $tree->SetItemBold( $item2, 1 );

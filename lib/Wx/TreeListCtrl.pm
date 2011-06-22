@@ -15,7 +15,7 @@ use strict;
 use warnings;
 use Wx;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 our @constants = qw(
      wxTL_MODE_NAV_FULLTREE
@@ -68,7 +68,7 @@ __END__
 
 Wx::TreeListCtrl - interface to the Wx::TreeListCtrl class
 
-=head1 VERSION 0.11
+=head1 VERSION 0.13
 
 =head1 SYNOPSIS
 

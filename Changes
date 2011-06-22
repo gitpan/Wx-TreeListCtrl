@@ -1,5 +1,8 @@
 Revision history for Perl extension Wx::TreeListCtrl.
 
+0.13  Jun  22  2011
+    - Fix Mac OSX Compilation
+
 0.12  Jun  21  2011
     - Used lastest base wxTreeListCtrl code from http://wxcode.sourceforge.net
       several methods updated to take 'coulmn' param.
